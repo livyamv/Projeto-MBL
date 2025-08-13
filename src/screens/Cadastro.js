@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   Alert,
   StyleSheet,
-  Button,
+  Image
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
@@ -17,93 +17,128 @@ export default function Cadastro() {
     email: "",
     password: "",
     name: "",
-    data_nascimento: "",
   });
 
   async function handleCadastro() {
-    await api.postUser(user).then(
-      (response) => {
-        Alert.alert("OK", response.data.message);
-      },
-      (error) => {
-        Alert.alert("Erro", error.response.data.error);
-      }
-    );
+    // Aqui vai sua requisição para cadastro
+    Alert.alert("Cadastro", "Usuário cadastrado com sucesso!");
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Cadastre-se</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="CPF"
-        value={user.cpf}
-        onChangeText={(value) => {
-          setUser({ ...user, cpf: value });
-        }}
+      {/* Logo */}
+      <Image
+        source={require("../../assets/iconLoc.png")} // Coloque o caminho correto da sua logo
+        style={styles.logo}
+        resizeMode="contain"
       />
+      <Text style={styles.subtitle}>Grandes Lugares Inspiram Momentos Perfeitos.</Text>
+
+      {/* Título */}
+      <Text style={styles.title}>Faça seu cadastro!</Text>
+
+      {/* Campos */}
       <TextInput
         style={styles.input}
-        placeholder="E-mail"
-        value={user.email}
-        onChangeText={(value) => {
-          setUser({ ...user, email: value });
-        }}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Senha"
-        value={user.password}
-        onChangeText={(value) => {
-          setUser({ ...user, password: value });
-        }}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Nome"
+        placeholder="Nome:"
+        placeholderTextColor="#000"
         value={user.name}
-        onChangeText={(value) => {
-          setUser({ ...user, name: value });
-        }}
+        onChangeText={(value) => setUser({ ...user, name: value })}
       />
       <TextInput
         style={styles.input}
-        placeholder="Data de Nascimento"
-        value={user.data_nascimento}
-        onChangeText={(value) => {
-          setUser({ ...user, data_nascimento: value });
-        }}
+        placeholder="CPF:"
+        placeholderTextColor="#000"
+        value={user.cpf}
+        onChangeText={(value) => setUser({ ...user, cpf: value })}
       />
-      <TouchableOpacity onPress={handleCadastro} style={styles.button}>
-        <Text>Cadastrar</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Email:"
+        placeholderTextColor="#000"
+        value={user.email}
+        onChangeText={(value) => setUser({ ...user, email: value })}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Senha:"
+        placeholderTextColor="#000"
+        secureTextEntry
+        value={user.password}
+        onChangeText={(value) => setUser({ ...user, password: value })}
+      />
+
+      {/* Link para Login */}
+      <View style={styles.loginRow}>
+        <Text style={styles.loginText}>Já possui uma conta?</Text>
+        <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+          <Text style={styles.loginLink}> Logar!</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Botão */}
+      <TouchableOpacity style={styles.button} onPress={handleCadastro}>
+        <Text style={styles.buttonText}>Cadastrar</Text>
       </TouchableOpacity>
-      <Button color={"#C77FFF"} 
-        title="Voltar para Login"
-        onPress={() => navigation.navigate("Login")}
-      />
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
+    backgroundColor: "#E5E5E5",
     alignItems: "center",
+    paddingHorizontal: 30,
+    paddingTop: 50,
+  },
+  logo: {
+    width: 120,
+    height: 120,
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 12,
+    textAlign: "center",
+    marginBottom: 30,
+    color: "#000",
   },
   title: {
-    fontSize: 28,
-    fontWeight: "bold",
+    fontSize: 20,
+    fontWeight: "400",
+    marginBottom: 20,
+    color: "#000",
   },
   input: {
     width: "100%",
-    height: 40,
-    borderBottomWidth: 1,
+    backgroundColor: "#AEB8D1",
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    fontSize: 14,
+    marginBottom: 15,
+  },
+  loginRow: {
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 20,
-    paddingHorizontal: 10,
+  },
+  loginText: {
+    fontSize: 14,
+    color: "#000",
+  },
+  loginLink: {
+    fontSize: 14,
+    color: "#FF7A7A",
   },
   button: {
-    backgroundColor: "#C77FFF",
-    padding: 10,
-    borderRadius: 5,
+    backgroundColor: "#6B7E91",
+    paddingVertical: 10,
+    paddingHorizontal: 25,
+    borderRadius: 15,
+  },
+  buttonText: {
+    fontSize: 16,
+    color: "#fff",
   },
 });

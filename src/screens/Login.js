@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#e6e6e6e",
     alignItems: "center",
-    paddingHorizontal: 10,
+    paddingHorizontal: 60,
   },
   welcomeText: {
     fontSize: 30,
@@ -91,6 +91,7 @@ const styles = StyleSheet.create({
     marginTop: 50, // espaço do topo da tela
     marginBottom: 10, // espaço entre o título e a logo
     textAlign: "center",
+    fontFamily: "sans-serif-light"
   },
 
   logoContainer: {
@@ -108,12 +109,14 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: "500",
     color: "#000",
+    fontFamily: "sans-serif"
   },
   subtitle: {
     fontSize: 18,
-    color: "#333",
+    color: "#000000ff",
     marginBottom: 205,
     textAlign: "center",
+    fontFamily: "sans-serif-light"
   },
   loginText: {
     fontSize: 20,
