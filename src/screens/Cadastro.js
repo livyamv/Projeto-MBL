@@ -13,18 +13,18 @@ import api from "../axios/axios";
 
 export default function Cadastro() {
   const navigation = useNavigation();
-  const [user, setUser] = useState({
+  const [usuario, setUsuario] = useState({
     cpf: "",
     email: "",
-    password: "",
-    name: "",
+    senha: "",
+    nome: "",
   });
 
   // Função para realizar o cadastro
   async function handleCadastro() {
     try {
       // Chamada para a API de cadastro
-      const response = await api.postCadastro(user);
+      const response = await api.postCadastro(usuario);
       
       // Se o cadastro for bem-sucedido
       Alert.alert("Sucesso", response.data.message);
@@ -59,30 +59,30 @@ export default function Cadastro() {
         style={styles.input}
         placeholder="Nome:"
         placeholderTextColor="#000"
-        value={user.name}
-        onChangeText={(value) => setUser({ ...user, name: value })}
+        value={usuario.nome}
+        onChangeText={(value) => setUsuario({ ...usuario, nme: value })}
       />
       <TextInput
         style={styles.input}
         placeholder="CPF:"
         placeholderTextColor="#000"
-        value={user.cpf}
-        onChangeText={(value) => setUser({ ...user, cpf: value })}
+        value={usuario.cpf}
+        onChangeText={(value) => setUsuario({ ...usuario, cpf: value })}
       />
       <TextInput
         style={styles.input}
         placeholder="Email:"
         placeholderTextColor="#000"
-        value={user.email}
-        onChangeText={(value) => setUser({ ...user, email: value })}
+        value={usuario.email}
+        onChangeText={(value) => setUsuario({ ...usuario, email: value })}
       />
       <TextInput
         style={styles.input}
         placeholder="Senha:"
         placeholderTextColor="#000"
         secureTextEntry
-        value={user.password}
-        onChangeText={(value) => setUser({ ...user, password: value })}
+        value={usuario.senha}
+        onChangeText={(value) => setUsuario({ ...usuario, senha: value })}
       />
 
       {/* Link para Login */}

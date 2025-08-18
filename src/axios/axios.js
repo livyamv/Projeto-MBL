@@ -1,23 +1,23 @@
 import axios from "axios";
+import * as SecureStore from "expo-secure-store";
 
 const api = axios.create({
-  baseURL: "http://10.89.240.68:3000/projeto_final/",
-  headers: {
-    accept: "application/json",
-  },
+  baseURL: "http://10.89.240.68:3000/projeto_final",
+  headers: { accept: "application/json" },
 });
 
 api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
-    token && (config.headers.Authorization = token);
+  async (config) => {
+    const token = await SecureStore.getItemAsync("token"); // pega token de forma assíncrona
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Endpoints
-api.postCadastro = (user) => api.post("/user", user);
-api.postLogin = (user) => api.post("/login", user);
+api.postCadastro = (usuario) => api.post("/user", usuario);
+api.postLogin = (usuario) => api.post("/login", usuario);
 
 export default api;
