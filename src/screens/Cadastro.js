@@ -9,6 +9,7 @@ import {
   Image
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import api from "../axios/axios";
 
 export default function Cadastro() {
   const navigation = useNavigation();
@@ -19,19 +20,35 @@ export default function Cadastro() {
     name: "",
   });
 
+  // Função para realizar o cadastro
   async function handleCadastro() {
-    // Aqui vai sua requisição para cadastro
-    Alert.alert("Cadastro", "Usuário cadastrado com sucesso!");
+    try {
+      // Chamada para a API de cadastro
+      const response = await api.postCadastro(user);
+      
+      // Se o cadastro for bem-sucedido
+      Alert.alert("Sucesso", response.data.message);
+      navigation.navigate("Login");  // Navega para a tela de login
+    } catch (error) {
+      // Exibe erro caso a requisição falhe
+      const errorMessage = error.response?.data?.error || "Erro desconhecido";
+      Alert.alert("Erro", errorMessage);
+      console.log("Erro no cadastro:", error);  // Log do erro completo no console
+    }
   }
 
   return (
     <View style={styles.container}>
-      {/* Logo */}
-      <Image
-        source={require("../../assets/iconLoc.png")} // Coloque o caminho correto da sua logo
-        style={styles.logo}
-        resizeMode="contain"
-      />
+
+      {/* Imagem e texto lado a lado */}
+      <View style={styles.logoContainer}>
+        <Image
+          source={require("../../assets/iconLoc.png")}
+          style={styles.logoImage}
+        />
+        <Text style={styles.logoText}>Glimp</Text>
+      </View>
+
       <Text style={styles.subtitle}>Grandes Lugares Inspiram Momentos Perfeitos.</Text>
 
       {/* Título */}
@@ -76,7 +93,7 @@ export default function Cadastro() {
         </TouchableOpacity>
       </View>
 
-      {/* Botão */}
+      {/* Botão de cadastro */}
       <TouchableOpacity style={styles.button} onPress={handleCadastro}>
         <Text style={styles.buttonText}>Cadastrar</Text>
       </TouchableOpacity>
@@ -90,18 +107,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#E5E5E5",
     alignItems: "center",
     paddingHorizontal: 30,
-    paddingTop: 50,
-  },
-  logo: {
-    width: 120,
-    height: 120,
-    marginBottom: 10,
+    paddingTop: 150,
   },
   subtitle: {
     fontSize: 12,
     textAlign: "center",
     marginBottom: 30,
     color: "#000",
+    fontFamily: "sans-serif-light"
   },
   title: {
     fontSize: 20,
@@ -110,11 +123,11 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   input: {
-    width: "100%",
+    width: "70%",
     backgroundColor: "#AEB8D1",
     borderRadius: 10,
     paddingHorizontal: 15,
-    paddingVertical: 8,
+    paddingVertical: 12,
     fontSize: 14,
     marginBottom: 15,
   },
@@ -126,6 +139,23 @@ const styles = StyleSheet.create({
   loginText: {
     fontSize: 14,
     color: "#000",
+  },
+  logoImage: {
+    width: 30,
+    height: 70,
+    resizeMode: "cover",
+    marginRight: 5,
+  },
+  logoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  logoText: {
+    fontSize: 30,
+    fontWeight: "500",
+    color: "#000",
+    fontFamily: "sans-serif"
   },
   loginLink: {
     fontSize: 14,
