@@ -23,23 +23,18 @@ export default function Cadastro() {
   // Função para realizar o cadastro
   async function handleCadastro() {
     try {
-      // Chamada para a API de cadastro
       const response = await api.postCadastro(usuario);
-      
-      // Se o cadastro for bem-sucedido
       Alert.alert("Sucesso", response.data.message);
-      navigation.navigate("Login");  // Navega para a tela de login
+      navigation.navigate("Login"); // Navega para a tela de login
     } catch (error) {
-      // Exibe erro caso a requisição falhe
       const errorMessage = error.response?.data?.error || "Erro desconhecido";
       Alert.alert("Erro", errorMessage);
-      console.log("Erro no cadastro:", error);  // Log do erro completo no console
+      console.log("Erro no cadastro:", error); // Log do erro completo no console
     }
   }
 
   return (
     <View style={styles.container}>
-
       {/* Imagem e texto lado a lado */}
       <View style={styles.logoContainer}>
         <Image
@@ -60,7 +55,7 @@ export default function Cadastro() {
         placeholder="Nome:"
         placeholderTextColor="#000"
         value={usuario.nome}
-        onChangeText={(value) => setUsuario({ ...usuario, nme: value })}
+        onChangeText={(value) => setUsuario({ ...usuario, nome: value })}
       />
       <TextInput
         style={styles.input}
@@ -107,20 +102,23 @@ const styles = StyleSheet.create({
     backgroundColor: "#E5E5E5",
     alignItems: "center",
     paddingHorizontal: 30,
-    paddingTop: 150,
+    paddingTop: 20,
   },
   subtitle: {
-    fontSize: 12,
+    fontSize: 18,
     textAlign: "center",
     marginBottom: 30,
     color: "#000",
-    fontFamily: "sans-serif-light"
+    fontFamily: "sans-serif-light",
+    marginTop: 1,
   },
   title: {
-    fontSize: 20,
+    fontSize: 23,
     fontWeight: "400",
     marginBottom: 20,
     color: "#000",
+    fontFamily: "sans-serif-light",
+    marginTop: 130,
   },
   input: {
     width: "70%",
@@ -142,9 +140,10 @@ const styles = StyleSheet.create({
   },
   logoImage: {
     width: 30,
-    height: 70,
+    height: 80,
     resizeMode: "cover",
     marginRight: 5,
+    marginTop: 20,
   },
   logoContainer: {
     flexDirection: "row",
@@ -152,10 +151,11 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   logoText: {
-    fontSize: 30,
+    fontSize: 40,
     fontWeight: "500",
     color: "#000",
-    fontFamily: "sans-serif"
+    fontFamily: "sans-serif", 
+    marginTop: 20,
   },
   loginLink: {
     fontSize: 14,
