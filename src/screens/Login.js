@@ -47,7 +47,7 @@ export default function Login({ navigation }) {
       </View>
 
       <Text style={styles.subtitle}>
-        Grandes Lugares Inspiram Momentos Perfeitos
+        Grandes Lugares Inspiram Momentos Perfeitossssss
       </Text>
 
       <Text style={styles.loginText}>Faça seu login!</Text>
