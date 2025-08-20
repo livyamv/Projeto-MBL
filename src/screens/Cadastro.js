@@ -60,7 +60,7 @@ export default function Cadastro() {
         placeholder="Nome:"
         placeholderTextColor="#000"
         value={usuario.nome}
-        onChangeText={(value) => setUsuario({ ...usuario, nme: value })}
+        onChangeText={(value) => setUsuario({ ...usuario, nome: value })}
       />
       <TextInput
         style={styles.input}
