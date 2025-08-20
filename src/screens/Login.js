@@ -5,15 +5,13 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Image,
   Alert,
 } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import api from "../axios/axios";
-
+import Logo from "../component/logo";
 export default function Login({ navigation }) {
   const [usuario, setUsuario] = useState({ email: "", senha: "" });
-  const [showPassword, setShowPassword] = useState(false);
 
   async function handleLogin() {
     try {
@@ -37,34 +35,28 @@ export default function Login({ navigation }) {
   return (
     <View style={styles.container}>
       <Text style={styles.welcomeText}>Bem vindo ao aplicativo</Text>
-
-      <View style={styles.logoContainer}>
-        <Image
-          source={require("../../assets/iconLoc.png")}
-          style={styles.logoImage}
-        />
-        <Text style={styles.logoText}>Glimp</Text>
-      </View>
-
+      <Logo />
       <Text style={styles.subtitle}>
-        Grandes Lugares Inspiram Momentos Perfeitossssss
+        Grandes Lugares Inspiram Momentos Perfeitos.
       </Text>
 
       <Text style={styles.loginText}>Faça seu login!</Text>
 
       <TextInput
         style={styles.input}
-        placeholder="Email"
-        placeholderTextColor="#555"
+        placeholder="Email:"
+        placeholderTextColor="#000"
+        keyboardType="email-address"
+        autoCapitalize="none"
         value={usuario.email}
         onChangeText={(value) => setUsuario({ ...usuario, email: value })}
       />
 
       <TextInput
         style={styles.input}
-        placeholder="Senha"
-        placeholderTextColor="#555"
-        secureTextEntry={!showPassword}
+        placeholder="Senha:"
+        placeholderTextColor="#000"
+        secureTextEntry
         value={usuario.senha}
         onChangeText={(value) => setUsuario({ ...usuario, senha: value })}
       />
@@ -82,65 +74,58 @@ export default function Login({ navigation }) {
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#e6e6e6",
     alignItems: "center",
-    paddingHorizontal: 60,
+    justifyContent: "flex-start",
+    paddingHorizontal: 40,
+    paddingTop: 60,
   },
   welcomeText: {
-    fontSize: 30,
+    fontSize: 20,
     color: "#000",
-    marginTop: 50,
     marginBottom: 10,
     textAlign: "center",
     fontFamily: "sans-serif-light",
   },
-  logoContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 4,
-  },
-  logoImage: { width: 30, height: 70, resizeMode: "cover", marginRight: 5 },
-  logoText: {
-    fontSize: 30,
-    fontWeight: "500",
-    color: "#000",
-    fontFamily: "sans-serif",
-  },
   subtitle: {
-    fontSize: 18,
-    color: "#000000ff",
-    marginBottom: 205,
+    fontSize: 17,
+    color: "#000",
+    marginBottom: 60,
     textAlign: "center",
     fontFamily: "sans-serif-light",
+    marginTop: 10,
+
   },
   loginText: {
-    fontSize: 20,
-    fontWeight: "400",
+    fontSize: 25,
     color: "#000",
-    marginBottom: 12,
+    marginBottom: 16,
+    marginTop: 100,
+
   },
   input: {
-    width: "80%",
+    width: "84%",
     backgroundColor: "#B0B8D4",
-    borderRadius: 8,
+    borderRadius: 10,
     padding: 12,
-    marginBottom: 12,
+    marginBottom: 16,
     fontSize: 14,
     color: "#000",
   },
   button: {
-    width: "40%",
+    width: "30%",
     backgroundColor: "#6B7A99",
     paddingVertical: 12,
-    borderRadius: 20,
+    borderRadius: 15,
     alignItems: "center",
-    marginTop: 10,
+    marginTop: 20,
   },
-  buttonText: { color: "#040404ff", fontSize: 14 },
+  buttonText: { color: "#000", fontSize: 15, fontWeight: "500" },
   linkContainer: { flexDirection: "row", marginTop: 10 },
-  linkText: { color: "#000", fontSize: 15 },
-  linkHighlight: { color: "#D98282", fontSize: 15 },
+  linkText: { color: "#000", fontSize: 14 },
+  linkHighlight: { color: "#D98282", fontSize: 14 },
 });
