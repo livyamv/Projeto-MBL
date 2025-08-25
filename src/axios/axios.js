@@ -8,7 +8,7 @@ const api = axios.create({
 
 api.interceptors.request.use(
   async (config) => {
-    const token = await SecureStore.getItemAsync("token"); // pega token de forma assíncrona
+    const token = await SecureStore.getItemAsync("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -16,7 +16,6 @@ api.interceptors.request.use(
   },
   (error) => Promise.reject(error)
 );
-
 
 api.postCadastro = (usuario) => api.post("/user", usuario);
 api.postLogin = (usuario) => api.post("/login", usuario);

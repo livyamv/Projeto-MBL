@@ -9,7 +9,7 @@ import {
   Pressable,
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
-import {Logo} from "../component/logo";
+import Logo from "../component/logo";
 
 const { width } = Dimensions.get("window");
 
@@ -21,9 +21,17 @@ export default function Home({ navigation }) {
   }
 
   const categorias = [
-    { key: "restaurante", image: require("../../assets/restaurante.png"), screen: "Restaurante" },
+    {
+      key: "restaurante",
+      image: require("../../assets/restaurante.png"),
+      screen: "Restaurante",
+    },
     { key: "lazer", image: require("../../assets/lazer.png"), screen: "Lazer" },
-    { key: "comercio", image: require("../../assets/comercio.png"), screen: "Comercio" },
+    {
+      key: "comercio",
+      image: require("../../assets/comercio.png"),
+      screen: "Comercio",
+    },
   ];
 
   return (

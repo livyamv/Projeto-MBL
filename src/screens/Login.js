@@ -99,14 +99,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontFamily: "sans-serif-light",
     marginTop: 10,
-
   },
   loginText: {
     fontSize: 25,
     color: "#000",
     marginBottom: 16,
     marginTop: 100,
-
   },
   input: {
     width: "84%",
