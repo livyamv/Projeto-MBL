@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import api from "../axios/axios";
+import Logo from "../component/logo";
 
 export default function Cadastro() {
   const navigation = useNavigation();
@@ -35,13 +36,9 @@ export default function Cadastro() {
 
   return (
     <View style={styles.container}>
-      {/* Imagem e texto lado a lado */}
-      <View style={styles.logoContainer}>
-        <Image
-          source={require("../../assets/iconLoc.png")}
-          style={styles.logoImage}
-        />
-        <Text style={styles.logoText}>Glimp</Text>
+
+      <View >
+        <Logo/>
       </View>
 
       <Text style={styles.subtitle}>Grandes Lugares Inspiram Momentos Perfeitos.</Text>
@@ -138,25 +135,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#000",
   },
-  logoImage: {
-    width: 30,
-    height: 80,
-    resizeMode: "cover",
-    marginRight: 5,
-    marginTop: 20,
-  },
-  logoContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 4,
-  },
-  logoText: {
-    fontSize: 40,
-    fontWeight: "500",
-    color: "#000",
-    fontFamily: "sans-serif", 
-    marginTop: 20,
-  },
+  
   loginLink: {
     fontSize: 14,
     color: "#FF7A7A",
