@@ -8,11 +8,16 @@ import {
   Alert,
 } from "react-native";
 import * as SecureStore from "expo-secure-store";
+import { Ionicons } from "@expo/vector-icons";
 import api from "../axios/axios";
 import Logo from "../component/logo";
 
 export default function Login({ navigation }) {
-  const [usuario, setUsuario] = useState({ email: "", senha: "" });
+  const [usuario, setUsuario] = useState({
+    email: "",
+    senha: "",
+    showPassword: false,
+  });
 
   async function handleLogin() {
     try {
@@ -53,14 +58,28 @@ export default function Login({ navigation }) {
         onChangeText={(value) => setUsuario({ ...usuario, email: value })}
       />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Senha:"
-        placeholderTextColor="#000"
-        secureTextEntry
-        value={usuario.senha}
-        onChangeText={(value) => setUsuario({ ...usuario, senha: value })}
-      />
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={styles.passwordInput}
+          placeholder="Senha:"
+          placeholderTextColor="#000"
+          secureTextEntry={!usuario.showPassword} 
+          value={usuario.senha}
+          onChangeText={(value) => setUsuario({ ...usuario, senha: value })}
+        />
+        <TouchableOpacity
+          style={styles.eyeIcon} 
+          onPress={() =>
+            setUsuario({ ...usuario, showPassword: !usuario.showPassword })
+          }
+        >
+          <Ionicons
+            name={usuario.showPassword ? "eye" : "eye-off"}
+            size={22}
+            color="grey"
+          />
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.linkContainer}>
         <Text style={styles.linkText}>Não possui login? </Text>
@@ -127,4 +146,22 @@ const styles = StyleSheet.create({
   linkContainer: { flexDirection: "row", marginTop: 10 },
   linkText: { color: "#000", fontSize: 14 },
   linkHighlight: { color: "#D98282", fontSize: 14 },
+  eyeIcon: {
+    padding: 5, 
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "84%", 
+    backgroundColor: "#B0B8D4",
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    marginBottom: 16,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingVertical: 12,
+    fontSize: 14,
+    color: "#000",
+  },
 });

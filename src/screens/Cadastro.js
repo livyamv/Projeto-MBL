@@ -6,8 +6,8 @@ import {
   TouchableOpacity,
   Alert,
   StyleSheet,
-  Image
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import api from "../axios/axios";
 import Logo from "../component/logo";
@@ -19,6 +19,7 @@ export default function Cadastro() {
     email: "",
     senha: "",
     nome: "",
+    showPassword: false,
   });
 
   // Função para realizar o cadastro
@@ -30,18 +31,19 @@ export default function Cadastro() {
     } catch (error) {
       const errorMessage = error.response?.data?.error || "Erro desconhecido";
       Alert.alert("Erro", errorMessage);
-      console.log("Erro no cadastro:", error); // Log do erro completo no console
+      console.log("Erro no cadastro:", error);
     }
   }
 
   return (
     <View style={styles.container}>
-
-      <View >
-        <Logo/>
+      <View>
+        <Logo />
       </View>
 
-      <Text style={styles.subtitle}>Grandes Lugares Inspiram Momentos Perfeitos.</Text>
+      <Text style={styles.subtitle}>
+        Grandes Lugares Inspiram Momentos Perfeitos.
+      </Text>
 
       {/* Título */}
       <Text style={styles.title}>Faça seu cadastro!</Text>
@@ -68,14 +70,27 @@ export default function Cadastro() {
         value={usuario.email}
         onChangeText={(value) => setUsuario({ ...usuario, email: value })}
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Senha:"
-        placeholderTextColor="#000"
-        secureTextEntry
-        value={usuario.senha}
-        onChangeText={(value) => setUsuario({ ...usuario, senha: value })}
-      />
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={styles.passwordInput}
+          placeholder="Senha:"
+          placeholderTextColor="#000"
+          secureTextEntry={!usuario.showPassword} 
+          value={usuario.senha}
+          onChangeText={(value) => setUsuario({ ...usuario, senha: value })}
+        />
+        <TouchableOpacity
+          onPress={() =>
+            setUsuario({ ...usuario, showPassword: !usuario.showPassword })
+          }
+        >
+          <Ionicons
+            name={usuario.showPassword ? "eye" : "eye-off"}
+            size={24}
+            color="grey"
+          />
+        </TouchableOpacity>
+      </View>
 
       {/* Link para Login */}
       <View style={styles.loginRow}>
@@ -135,7 +150,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#000",
   },
-  
+
   loginLink: {
     fontSize: 14,
     color: "#FF7A7A",
@@ -149,5 +164,20 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     color: "#fff",
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "70%", // igual ao input normal
+    backgroundColor: "#AEB8D1", // mesma cor dos outros inputs
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    marginBottom: 15,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingVertical: 12,
+    fontSize: 14,
+    color: "#000",
   },
 });
