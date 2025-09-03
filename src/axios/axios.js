@@ -17,8 +17,11 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-
 api.postCadastro = (usuario) => api.post("/user", usuario);
 api.postLogin = (usuario) => api.post("/login", usuario);
+api.getbuscarEstabelecimentos = (params) =>
+  api.get("/buscar", { params });
+
+
 
 export default api;
