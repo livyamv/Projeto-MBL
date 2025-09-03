@@ -6,6 +6,8 @@ import Login from "./src/screens/Login";
 import Cadastro from "./src/screens/Cadastro";
 import Home from "./src/screens/Home";
 import { Provider as PaperProvider } from "react-native-paper";
+import Favoritos from "./src/screens/Favoritos";
+import SobreNos from "./src/screens/SobreNos";
 
 const Stack = createStackNavigator();
 
@@ -18,6 +20,8 @@ export default function App() {
           <Stack.Screen name="Login" component={Login} />
           <Stack.Screen name="Cadastro" component={Cadastro} />
           <Stack.Screen name="Home" component={Home} />
+          <Stack.Screen name="Favoritos" component={Favoritos} />
+          <Stack.Screen name="SobreNos" component={SobreNos} />
         </Stack.Navigator>
       </NavigationContainer>
     </PaperProvider>
