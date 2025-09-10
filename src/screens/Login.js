@@ -63,12 +63,12 @@ export default function Login({ navigation }) {
           style={styles.passwordInput}
           placeholder="Senha:"
           placeholderTextColor="#000"
-          secureTextEntry={!usuario.showPassword} 
+          secureTextEntry={!usuario.showPassword}
           value={usuario.senha}
           onChangeText={(value) => setUsuario({ ...usuario, senha: value })}
         />
         <TouchableOpacity
-          style={styles.eyeIcon} 
+          style={styles.eyeIcon}
           onPress={() =>
             setUsuario({ ...usuario, showPassword: !usuario.showPassword })
           }
@@ -147,12 +147,12 @@ const styles = StyleSheet.create({
   linkText: { color: "#000", fontSize: 14 },
   linkHighlight: { color: "#D98282", fontSize: 14 },
   eyeIcon: {
-    padding: 5, 
+    padding: 5,
   },
   passwordContainer: {
     flexDirection: "row",
     alignItems: "center",
-    width: "84%", 
+    width: "84%",
     backgroundColor: "#B0B8D4",
     borderRadius: 10,
     paddingHorizontal: 10,

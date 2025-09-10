@@ -6,6 +6,7 @@ const api = axios.create({
   headers: { accept: "application/json" },
 });
 
+// Interceptador para enviar o token automaticamente
 api.interceptors.request.use(
   async (config) => {
     const token = await SecureStore.getItemAsync("token");
@@ -17,12 +18,13 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Rotas da API
 api.postCadastro = (usuario) => api.post("/user", usuario);
 api.postLogin = (usuario) => api.post("/login", usuario);
-api.getbuscarEstabelecimentos = (params) =>
-  api.get("/buscar", { params });
-  api.updateUser = (dadosUsuario) => api.put("/user", dadosUsuario);
-  api.deleteUser = (id) => api.delete(`/user/${id}`);
-  api.getUserById = (id) => api.get(`/user/${id}`);
+api.updateUser = (dadosUsuario) => api.put("/user", dadosUsuario);
+api.deleteUser = (id) => api.delete(`/user/${id}`);
+api.getUserById = (id) => api.get(`/user/${id}`);
+
+api.getEstabelecimentos = (params) => api.get("/buscar", { params });
 
 export default api;
