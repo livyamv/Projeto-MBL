@@ -25,18 +25,27 @@ export default function Login({ navigation }) {
         email: usuario.email,
         senha: usuario.senha,
       });
-
-      if (response.data.token) {
+  
+      // Verifica se o backend retornou token e usuário
+      if (response.data.token && response.data.user) {
         await SecureStore.setItemAsync("token", response.data.token);
+        await SecureStore.setItemAsync(
+          "userId",
+          String(response.data.user.id_usuario) // salva o ID do usuário logado
+        );
+      } else {
+        Alert.alert("Erro", "Falha ao receber token do servidor.");
+        return;
       }
-
+      
+  
       Alert.alert("Sucesso", response.data.message);
       navigation.navigate("Home");
     } catch (error) {
       console.log("Erro login:", JSON.stringify(error, null, 2));
       Alert.alert("Erro", error.response?.data?.error || "Falha ao conectar.");
     }
-  }
+  }  
 
   return (
     <View style={styles.container}>
@@ -165,3 +174,4 @@ const styles = StyleSheet.create({
     color: "#000",
   },
 });
+

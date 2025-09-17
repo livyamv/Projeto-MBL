@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -17,7 +18,7 @@ import api from "../axios/axios";
 export default function Perfil({ navigation }) {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
-  const [senha, setSenha] = useState("");
+  const [senha, setSenha] = useState(""); // só será enviada se preenchida
   const [fotoPerfil, setFotoPerfil] = useState(null);
 
   // --- Carrega dados do usuário logado ---
@@ -25,15 +26,18 @@ export default function Perfil({ navigation }) {
     const carregarUsuario = async () => {
       try {
         const userId = await SecureStore.getItemAsync("userId");
-        if (!userId) return;
+        const token = await SecureStore.getItemAsync("token");
+        if (!userId || !token) return;
 
-        const response = await api.getUserById(userId);
+        const response = await api.get(`/user/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
         const usuario = response.data;
-
         setNome(usuario.nome);
         setEmail(usuario.email);
-        setSenha(usuario.senha);
         setFotoPerfil(usuario.fotoPerfil || null);
+        setSenha(""); // não exibe senha
       } catch (error) {
         console.log(error.response?.data || error);
         Alert.alert("Erro", "Não foi possível carregar os dados do usuário.");
@@ -42,6 +46,31 @@ export default function Perfil({ navigation }) {
 
     carregarUsuario();
   }, []);
+
+  // --- Função para atualizar foto no backend ---
+  const atualizarFoto = async (uri) => {
+    try {
+      const userId = await SecureStore.getItemAsync("userId");
+      const token = await SecureStore.getItemAsync("token");
+
+      const formData = new FormData();
+      formData.append("fotoPerfil", {
+        uri,
+        name: "foto.jpg",
+        type: "image/jpeg",
+      });
+
+      await api.put(`/user/${userId}/foto`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+    } catch (error) {
+      console.log(error.response?.data || error);
+      Alert.alert("Erro", "Não foi possível atualizar a foto.");
+    }
+  };
 
   // --- Funções de foto ---
   async function escolherFoto() {
@@ -52,7 +81,9 @@ export default function Perfil({ navigation }) {
       quality: 1,
     });
     if (!result.canceled) {
-      setFotoPerfil(result.assets[0].uri);
+      const uri = result.assets[0].uri;
+      setFotoPerfil(uri);
+      await atualizarFoto(uri); // envia para backend
     }
   }
 
@@ -63,7 +94,9 @@ export default function Perfil({ navigation }) {
       quality: 1,
     });
     if (!result.canceled) {
-      setFotoPerfil(result.assets[0].uri);
+      const uri = result.assets[0].uri;
+      setFotoPerfil(uri);
+      await atualizarFoto(uri); // envia para backend
     }
   }
 
@@ -79,11 +112,18 @@ export default function Perfil({ navigation }) {
   const atualizarPerfil = async () => {
     try {
       const id = await SecureStore.getItemAsync("userId");
-      const cpf = await SecureStore.getItemAsync("cpf"); // se salvou no login
-      const usuario = { id, cpf, nome, email, senha };
+      const token = await SecureStore.getItemAsync("token");
+      if (!id || !token) {
+        Alert.alert("Erro", "Usuário não autenticado. Faça login novamente.");
+        return;
+      }
 
-      const response = await api.updateUser(usuario);
+      const usuarioAtualizado = { id, nome, email };
+      if (senha) usuarioAtualizado.senha = senha;
+
+      const response = await api.updateUser(usuarioAtualizado);
       Alert.alert("Sucesso", response.data.message || "Perfil atualizado!");
+      setSenha(""); // limpa o campo de senha
     } catch (error) {
       console.log(error.response?.data || error);
       Alert.alert(
@@ -120,7 +160,6 @@ export default function Perfil({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <LinearGradient
         colors={["#1f2a44", "#3A5BA0", "#6f87c7"]}
         start={{ x: 0, y: 0 }}
@@ -136,7 +175,6 @@ export default function Perfil({ navigation }) {
         <Feather name="settings" size={24} color="#fff" />
       </LinearGradient>
 
-      {/* Foto de perfil */}
       <TouchableOpacity onPress={escolherOpcaoFoto}>
         <Image
           source={
@@ -146,7 +184,6 @@ export default function Perfil({ navigation }) {
         />
       </TouchableOpacity>
 
-      {/* Inputs */}
       <View style={styles.form}>
         <TextInput
           style={styles.input}
@@ -165,12 +202,11 @@ export default function Perfil({ navigation }) {
           style={styles.input}
           value={senha}
           onChangeText={setSenha}
-          placeholder="Senha"
+          placeholder="Nova senha"
           secureTextEntry
         />
       </View>
 
-      {/* Botões */}
       <View style={styles.botoesBox}>
         <TouchableOpacity style={styles.botao} onPress={atualizarPerfil}>
           <Text style={styles.textoBotao}>Editar perfil</Text>
@@ -197,7 +233,6 @@ export default function Perfil({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#e5e5e5", alignItems: "center" },
-
   header: {
     width: "100%",
     height: 160,
@@ -209,7 +244,6 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 50,
     borderBottomRightRadius: 50,
   },
-
   fotoPerfil: {
     width: 130,
     height: 130,
@@ -218,7 +252,6 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: "#fff",
   },
-
   form: { width: "85%", marginTop: 105 },
   input: {
     backgroundColor: "#fff",
@@ -230,14 +263,12 @@ const styles = StyleSheet.create({
     elevation: 2,
     borderColor: "black",
   },
-
   botoesBox: {
     flexDirection: "row",
     justifyContent: "space-between",
     width: "85%",
     marginTop: 25,
   },
-
   botao: {
     flexDirection: "row",
     backgroundColor: "#5a6fa1",
@@ -251,9 +282,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 2, height: 2 },
     shadowRadius: 5,
   },
-
   textoBotao: { color: "#fff", fontSize: 16, fontWeight: "600" },
-
   excluirConta: {
     marginTop: 25,
     borderWidth: 2,
@@ -264,3 +293,4 @@ const styles = StyleSheet.create({
   },
   excluirTexto: { color: "red", fontSize: 16, fontWeight: "bold" },
 });
+
