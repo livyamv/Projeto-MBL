@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -292,3 +293,4 @@ const styles = StyleSheet.create({
   },
   excluirTexto: { color: "red", fontSize: 16, fontWeight: "bold" },
 });
+
