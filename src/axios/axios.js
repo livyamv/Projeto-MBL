@@ -21,7 +21,8 @@ api.postCadastro = (usuario) => api.post("/user", usuario);
 api.postLogin = (usuario) => api.post("/login", usuario);
 api.getbuscarEstabelecimentos = (params) =>
   api.get("/buscar", { params });
-
-
+  api.updateUser = (dadosUsuario) => api.put("/user", dadosUsuario);
+  api.deleteUser = (id) => api.delete(`/user/${id}`);
+  api.getUserById = (id) => api.get(`/user/${id}`);
 
 export default api;
