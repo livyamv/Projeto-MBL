@@ -6,8 +6,8 @@ import {
   TouchableOpacity,
   Alert,
   StyleSheet,
-  Image
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import api from "../axios/axios";
 import Logo from "../component/logo";
@@ -18,30 +18,47 @@ export default function Cadastro() {
     cpf: "",
     email: "",
     senha: "",
+    confirmarSenha: "",
     nome: "",
   });
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   // Função para realizar o cadastro
   async function handleCadastro() {
+    if (usuario.senha !== usuario.confirmarSenha) {
+      Alert.alert("Erro", "As senhas não coincidem!");
+      return;
+    }
+
     try {
-      const response = await api.postCadastro(usuario);
+      const response = await api.postCadastro({
+        cpf: usuario.cpf,
+        email: usuario.email,
+        senha: usuario.senha,
+        confirmarSenha: usuario.confirmarSenha,
+        nome: usuario.nome,
+      });
+
       Alert.alert("Sucesso", response.data.message);
       navigation.navigate("Login"); // Navega para a tela de login
     } catch (error) {
       const errorMessage = error.response?.data?.error || "Erro desconhecido";
       Alert.alert("Erro", errorMessage);
-      console.log("Erro no cadastro:", error); // Log do erro completo no console
+      console.log("Erro no cadastro:", error);
     }
   }
 
   return (
     <View style={styles.container}>
-
-      <View >
-        <Logo/>
+      <View>
+        <Logo />
       </View>
 
-      <Text style={styles.subtitle}>Grandes Lugares Inspiram Momentos Perfeitos.</Text>
+      <Text style={styles.subtitle}>
+        Grandes Lugares Inspiram Momentos Perfeitos.
+      </Text>
 
       {/* Título */}
       <Text style={styles.title}>Faça seu cadastro!</Text>
@@ -68,14 +85,48 @@ export default function Cadastro() {
         value={usuario.email}
         onChangeText={(value) => setUsuario({ ...usuario, email: value })}
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Senha:"
-        placeholderTextColor="#000"
-        secureTextEntry
-        value={usuario.senha}
-        onChangeText={(value) => setUsuario({ ...usuario, senha: value })}
-      />
+      
+      {/* Campo Senha */}
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={styles.passwordInput}
+          placeholder="Senha:"
+          placeholderTextColor="#000"
+          secureTextEntry={!showPassword}
+          value={usuario.senha}
+          onChangeText={(value) => setUsuario({ ...usuario, senha: value })}
+        />
+        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+          <Ionicons
+            name={showPassword ? "eye" : "eye-off"}
+            size={24}
+            color="grey"
+          />
+        </TouchableOpacity>
+      </View>
+
+      {/* Campo Confirmar Senha */}
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={styles.passwordInput}
+          placeholder="Confirmar Senha:"
+          placeholderTextColor="#000"
+          secureTextEntry={!showConfirmPassword}
+          value={usuario.confirmarSenha}
+          onChangeText={(value) =>
+            setUsuario({ ...usuario, confirmarSenha: value })
+          }
+        />
+        <TouchableOpacity
+          onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+        >
+          <Ionicons
+            name={showConfirmPassword ? "eye" : "eye-off"}
+            size={24}
+            color="grey"
+          />
+        </TouchableOpacity>
+      </View>
 
       {/* Link para Login */}
       <View style={styles.loginRow}>
@@ -135,7 +186,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#000",
   },
-  
   loginLink: {
     fontSize: 14,
     color: "#FF7A7A",
@@ -149,5 +199,20 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     color: "#fff",
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "70%",
+    backgroundColor: "#AEB8D1",
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    marginBottom: 15,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingVertical: 12,
+    fontSize: 14,
+    color: "#000",
   },
 });
