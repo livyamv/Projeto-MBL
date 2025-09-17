@@ -5,10 +5,11 @@ import Inicial from "./src/screens/Inicial";
 import Login from "./src/screens/Login";
 import Cadastro from "./src/screens/Cadastro";
 import Home from "./src/screens/Home";
-import Perfil from "./src/screens/Perfil"; 
+import Perfil from "./src/screens/Perfil";
 import { Provider as PaperProvider } from "react-native-paper";
 import Favoritos from "./src/screens/Favoritos";
 import SobreNos from "./src/screens/SobreNos";
+import Avaliacao from "./src/screens/Avaliacao";
 
 const Stack = createStackNavigator();
 
@@ -23,8 +24,8 @@ export default function App() {
           <Stack.Screen name="Home" component={Home} />
           <Stack.Screen name="Favoritos" component={Favoritos} />
           <Stack.Screen name="SobreNos" component={SobreNos} />
-
-          <Stack.Screen name="Perfil" component={Perfil} /> 
+          <Stack.Screen name="Perfil" component={Perfil} />
+          <Stack.Screen name="Avaliacao" component={Avaliacao} />
         </Stack.Navigator>
       </NavigationContainer>
     </PaperProvider>
