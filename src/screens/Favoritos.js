@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TextInput,
   Dimensions,
-  Image,
   Pressable,
   FlatList,
   Animated,
@@ -17,46 +16,27 @@ import api from "../axios/axios";
 const { width } = Dimensions.get("window");
 
 export default function Home({ navigation }) {
-  const [estabelecimentos, setEstabelecimentos] = useState([]);
+  const [favoritos, setFavoritos] = useState([]); // voltou a ser favoritos
   const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("restaurante");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const slideAnim = useRef(new Animated.Value(-width * 0.6)).current;
 
   useEffect(() => {
-    async function carregarEstabelecimentos() {
+    async function carregarFavoritos() {
       try {
-        const tipos = ["restaurant", "store", "park"];
-        let todos = [];
+        const response = await api.get("/favoritos"); // rota correta
+        console.log("Favoritos:", response.data);
 
-        for (const type of tipos) {
-          const response = await api.getbuscarEstabelecimentos({
-            location: "-20.12345,-47.12345",
-            radius: 5000,
-            type,
-          });
-          console.log(`Tipo ${type} retornou:`, response.data);
-
-          if (Array.isArray(response.data)) {
-            todos = [...todos, ...response.data];
-          } else if (response.data?.estabelecimentos) {
-            todos = [...todos, ...response.data.estabelecimentos];
-          }
+        if (Array.isArray(response.data)) {
+          setFavoritos(response.data);
+        } else if (response.data?.favoritos) {
+          setFavoritos(response.data.favoritos);
         }
-
-        console.log("Todos os estabelecimentos:", todos);
-        setEstabelecimentos(todos);
       } catch (error) {
-        if (error.response) {
-          console.error("Erro da API:", error.response.data);
-        } else if (error.request) {
-          console.error("Sem resposta do servidor:", error.request);
-        } else {
-          console.error("Erro desconhecido:", error.message);
-        }
+        console.error("Erro ao carregar favoritos:", error.message);
       }
     }
-    carregarEstabelecimentos();
+    carregarFavoritos();
   }, []);
 
   function handleLogout() {
@@ -80,37 +60,27 @@ export default function Home({ navigation }) {
     }
   }
 
-  const categorias = [
-    { key: "restaurante", image: require("../../assets/restaurante.png") },
-    { key: "lazer", image: require("../../assets/lazer.png") },
-    { key: "comercio", image: require("../../assets/comercio.png") },
-  ];
-
-  const listaFiltrada = estabelecimentos.filter((item) =>
+  const listaFiltrada = favoritos.filter((item) =>
     item.nome?.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <View style={styles.container}>
+      {/* HEADER */}
       <View style={styles.header}>
-        {/* Ícone do menu no canto esquerdo */}
         <Pressable onPress={toggleSidebar}>
           <Entypo name="menu" size={28} color="#333" />
         </Pressable>
 
-        {/* Logo + frase no canto direito */}
         <View style={styles.logoContainer}>
           <Logo />
-          <Text style={styles.subtitle}>
-            Grandes Lugares Inspiram Momentos Perfeitos.
-          </Text>
         </View>
       </View>
 
-      {/* Campo de busca */}
+      {/* CAMPO DE PESQUISA */}
       <View style={styles.searchContainer}>
         <TextInput
-          placeholder="Pesquisar"
+          placeholder="Pesquisar nos favoritos"
           style={styles.searchInput}
           placeholderTextColor="#555"
           value={search}
@@ -119,51 +89,31 @@ export default function Home({ navigation }) {
         <AntDesign name="search1" size={20} color="#fff" />
       </View>
 
-      {/* Categorias */}
-      <View style={styles.categoriesContainer}>
-        {categorias.map((cat) => (
-          <Pressable
-            key={cat.key}
-            onPress={() => setSelectedCategory(cat.key)}
-            style={[
-              styles.categoryButton,
-              selectedCategory === cat.key && styles.selected,
-            ]}
-          >
-            <Image source={cat.image} style={styles.categoryImage} />
-          </Pressable>
-        ))}
-      </View>
-
-      {/* Lista de Estabelecimentos */}
+      {/* LISTA DE FAVORITOS */}
       <FlatList
         data={listaFiltrada}
         keyExtractor={(item, index) => String(item.id || index)}
         renderItem={({ item }) => (
           <View style={styles.card}>
-            <View style={styles.iconBox} />
             <Text style={styles.cardText}>{item.nome}</Text>
+            <AntDesign name="heart" size={20} color="red" />
           </View>
         )}
-        style={{ marginTop: 20 }}
         ListEmptyComponent={
           <Text style={{ textAlign: "center", marginTop: 20, color: "#555" }}>
-            Nenhum estabelecimento encontrado
+            Nenhum favorito encontrado
           </Text>
         }
       />
 
-      {/* Footer */}
+      {/* FOOTER */}
       <View style={styles.footer}>
         <Pressable style={styles.logoutButton} onPress={handleLogout}>
           <AntDesign name="logout" size={24} color="gray" />
         </Pressable>
-        <Pressable>
-          <AntDesign name="heart" size={28} color="gray" />
-        </Pressable>
       </View>
 
-      {/* Sidebar */}
+      {/* SIDEBAR */}
       {sidebarOpen && (
         <>
           <Pressable style={styles.overlay} onPress={toggleSidebar} />
@@ -178,10 +128,10 @@ export default function Home({ navigation }) {
 
             <Pressable
               style={styles.sidebarButton}
-              onPress={() => navigation.navigate("Favoritos")}
+              onPress={() => navigation.navigate("Home")}
             >
-              <AntDesign name="hearto" size={22} color="#333" />
-              <Text style={styles.sidebarItem}>Favoritos</Text>
+              <AntDesign name="home" size={28} color="gray" />
+              <Text style={styles.sidebarItem}>Home</Text>
             </Pressable>
 
             <Pressable
@@ -225,26 +175,13 @@ export default function Home({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#e5e5e5", padding: 20 },
   header: {
-    flexDirection: "row", // menu e logo lado a lado
-    justifyContent: "space-between", // menu à esquerda, logo à direita
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
     marginTop: 40,
     marginBottom: 20,
   },
-
-  logoContainer: {
-    flexDirection: "column", // logo em cima, frase embaixo
-    alignItems: "flex-end", // para ficar alinhado à direita
-  },
-
-  subtitle: {
-    fontSize: 13,
-    color: "#555",
-    marginTop: 4,
-    maxWidth: width * 0.6,
-    textAlign: "right", // frase alinhada à direita
-  },
-
+  logoContainer: { flexDirection: "column", alignItems: "flex-end" },
   searchContainer: {
     flexDirection: "row",
     backgroundColor: "#C2C2C2",
@@ -252,43 +189,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     alignItems: "center",
-    marginBottom: 30,
+    marginBottom: 20,
   },
   searchInput: { flex: 1, fontSize: 16, color: "white" },
-  categoriesContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 10,
-  },
-  categoryButton: {
-    backgroundColor: "#8fa1b6",
-    padding: 10,
-    borderRadius: 12,
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  selected: { backgroundColor: "#5a6fa1" },
-  categoryImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 8,
-    resizeMode: "cover",
-  },
   card: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#fff",
-    padding: 12,
-    marginBottom: 10,
-    borderRadius: 8,
-  },
-  iconBox: {
-    width: 20,
-    height: 20,
-    borderRadius: 5,
-    backgroundColor: "#5a6fa1",
-    marginRight: 12,
+    padding: 15,
+    marginBottom: 12,
+    borderRadius: 10,
+    justifyContent: "space-between",
   },
   cardText: { fontSize: 16, color: "#333" },
   footer: {
@@ -302,15 +213,16 @@ const styles = StyleSheet.create({
   },
   logoutButton: { flexDirection: "row", alignItems: "center", gap: 5 },
   sidebar: {
-    position: "absolute",
-    top: 0,
-    height: "100%",
-    width: width * 0.6,
-    backgroundColor: "#ddd",
-    padding: 20,
-    elevation: 5,
-    zIndex: 100,
-  },
+  position: "absolute",
+  top: 0,
+  bottom: 0,
+  width: width * 0.6,
+  backgroundColor: "#ddd",
+  padding: 20,
+  elevation: 5,
+  zIndex: 100,
+},
+
   sidebarButton: {
     flexDirection: "row",
     alignItems: "center",
