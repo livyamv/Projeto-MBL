@@ -18,14 +18,29 @@ export default function Cadastro() {
     cpf: "",
     email: "",
     senha: "",
+    confirmarSenha: "",
     nome: "",
-    showPassword: false,
   });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Função para realizar o cadastro
   async function handleCadastro() {
+    if (usuario.senha !== usuario.confirmarSenha) {
+      Alert.alert("Erro", "As senhas não coincidem!");
+      return;
+    }
+
     try {
-      const response = await api.postCadastro(usuario);
+      const response = await api.postCadastro({
+        cpf: usuario.cpf,
+        email: usuario.email,
+        senha: usuario.senha,
+        confirmarSenha: usuario.confirmarSenha,
+        nome: usuario.nome,
+      });
+
       Alert.alert("Sucesso", response.data.message);
       navigation.navigate("Login"); // Navega para a tela de login
     } catch (error) {
@@ -70,22 +85,43 @@ export default function Cadastro() {
         value={usuario.email}
         onChangeText={(value) => setUsuario({ ...usuario, email: value })}
       />
+      
+      {/* Campo Senha */}
       <View style={styles.passwordContainer}>
         <TextInput
           style={styles.passwordInput}
           placeholder="Senha:"
           placeholderTextColor="#000"
-          secureTextEntry={!usuario.showPassword} 
+          secureTextEntry={!showPassword}
           value={usuario.senha}
           onChangeText={(value) => setUsuario({ ...usuario, senha: value })}
         />
-        <TouchableOpacity
-          onPress={() =>
-            setUsuario({ ...usuario, showPassword: !usuario.showPassword })
+        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+          <Ionicons
+            name={showPassword ? "eye" : "eye-off"}
+            size={24}
+            color="grey"
+          />
+        </TouchableOpacity>
+      </View>
+
+      {/* Campo Confirmar Senha */}
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={styles.passwordInput}
+          placeholder="Confirmar Senha:"
+          placeholderTextColor="#000"
+          secureTextEntry={!showConfirmPassword}
+          value={usuario.confirmarSenha}
+          onChangeText={(value) =>
+            setUsuario({ ...usuario, confirmarSenha: value })
           }
+        />
+        <TouchableOpacity
+          onPress={() => setShowConfirmPassword(!showConfirmPassword)}
         >
           <Ionicons
-            name={usuario.showPassword ? "eye" : "eye-off"}
+            name={showConfirmPassword ? "eye" : "eye-off"}
             size={24}
             color="grey"
           />
@@ -150,7 +186,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#000",
   },
-
   loginLink: {
     fontSize: 14,
     color: "#FF7A7A",
@@ -168,8 +203,8 @@ const styles = StyleSheet.create({
   passwordContainer: {
     flexDirection: "row",
     alignItems: "center",
-    width: "70%", // igual ao input normal
-    backgroundColor: "#AEB8D1", // mesma cor dos outros inputs
+    width: "70%",
+    backgroundColor: "#AEB8D1",
     borderRadius: 10,
     paddingHorizontal: 10,
     marginBottom: 15,
