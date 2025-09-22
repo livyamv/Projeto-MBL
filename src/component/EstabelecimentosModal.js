@@ -1,98 +1,71 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, Pressable, Modal, ScrollView, Linking, Alert, TextInput, Button } from "react-native";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  Modal,
+  Linking,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
-import api from "../axios/axios"; 
+import api from "../axios/axios";
 
-export default function EstabelecimentosModal({ visible, onClose, item, userToken, id_usuario }) {
-  const [favorito, setFavorito] = useState(false);
-  const [favoritoId, setFavoritoId] = useState(null);
-  const [avaliacoes, setAvaliacoes] = useState([]);
-  const [comentario, setComentario] = useState("");
-
-  // Buscar favoritos
-  useEffect(() => {
-    if (!item) return;
-
-    const fetchFavorito = async () => {
-      try {
-        const response = await api.getFavoritos();
-        const fav = response.data.find(f => f.id_estabelecimento === item.id);
-        if (fav) {
-          setFavorito(true);
-          setFavoritoId(fav.id_favorito);
-        } else {
-          setFavorito(false);
-          setFavoritoId(null);
-        }
-      } catch (error) {
-        console.error("Erro ao buscar favoritos:", error.response?.data || error.message);
-      }
-    };
-
-    fetchFavorito();
-  }, [item]);
-
-  // Buscar avaliações
-  const fetchAvaliacoes = async () => {
-    if (!item) return;
-    try {
-      const res = await api.getAvaliacoes(item.id); // 👈 rota centralizada
-      setAvaliacoes(res.data);
-    } catch (error) {
-      console.error("Erro ao buscar avaliações:", error.response?.data || error.message);
-    }
-  };
-
-  useEffect(() => {
-    if (item) fetchAvaliacoes();
-  }, [item]);
-
-  // Criar comentário
-  const handleCreate = async () => {
-    if (!comentario.trim()) return Alert.alert("Atenção", "Digite um comentário");
-    try {
-      await api.createAvaliacao({ id_usuario, google_place_id: item.id, comentario });
-      setComentario("");
-      fetchAvaliacoes();
-    } catch (error) {
-      console.error("Erro ao criar comentário:", error.response?.data || error.message);
-      Alert.alert("Erro", "Não foi possível enviar o comentário.");
-    }
-  };
-
-  // Deletar comentário
-  const handleDelete = async (id_avaliacao) => {
-    try {
-      await api.deleteAvaliacao(id_avaliacao); // 👈 rota centralizada
-      fetchAvaliacoes();
-    } catch (error) {
-      console.error("Erro ao deletar comentário:", error.response?.data || error.message);
-      Alert.alert("Erro", "Não foi possível deletar o comentário.");
-    }
-  };
-
-  const abrirSite = () => {
-    if (item.site) Linking.openURL(item.site).catch(err => console.error("Erro ao abrir site:", err));
-  };
-
-  const toggleFavorito = async () => {
-    try {
-      if (!favorito) {
-        const response = await api.addFavorito({ id_estabelecimento: item.id });
-        setFavorito(true);
-        setFavoritoId(response.data.id_favorito);
-      } else {
-        await api.removeFavorito(favoritoId);
-        setFavorito(false);
-        setFavoritoId(null);
-      }
-    } catch (error) {
-      console.error("Erro ao atualizar favoritos:", error.response?.data || error.message);
-      Alert.alert("Erro", "Não foi possível atualizar os favoritos.");
-    }
-  };
+export default function EstabelecimentosModal({ visible, onClose, item }) {
+  const [loading, setLoading] = useState(false);
 
   if (!item) return null;
+
+  const abrirSite = () => {
+    if (item.site) {
+      Linking.openURL(item.site).catch((err) =>
+        console.error("Erro ao abrir site:", err)
+      );
+    }
+  };
+
+  const abrirNoMaps = () => {
+    if (item.endereco) {
+      const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+        item.endereco
+      )}`;
+      Linking.openURL(url).catch((err) =>
+        console.error("Erro ao abrir no Maps:", err)
+      );
+    }
+  };
+
+  const adicionarFavorito = async () => {
+    if (!item.place_id) {
+      Alert.alert("Erro", "ID do estabelecimento não disponível.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // NÃO envie id_usuario, o token já identifica o usuário
+      await api.addFavorito({
+        google_place_id: item.place_id,
+        nome_estabelecimento: item.nome || "",
+        endereco: item.endereco || "",
+      });
+
+      Alert.alert("Sucesso", "Adicionado aos favoritos!");
+    } catch (error) {
+      console.error(
+        "Erro ao atualizar favorito:",
+        error.response?.data || error
+      );
+      Alert.alert(
+        "Erro",
+        error.response?.data?.message || "Não foi possível favoritar"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
@@ -100,46 +73,42 @@ export default function EstabelecimentosModal({ visible, onClose, item, userToke
         <View style={styles.container}>
           <View style={styles.header}>
             <Text style={styles.title}>{item.nome}</Text>
-            <Pressable onPress={toggleFavorito}>
-              <Icon name={favorito ? "heart" : "heart-o"} size={24} color="#e91e63" />
-            </Pressable>
+            <View style={styles.icons}>
+              <Pressable onPress={abrirNoMaps} style={styles.iconButton}>
+                <Icon name="map-marker" size={22} color="#333" />
+              </Pressable>
+              <Pressable onPress={adicionarFavorito} style={styles.iconButton}>
+                {loading ? (
+                  <ActivityIndicator size="small" color="#e63946" />
+                ) : (
+                  <Icon name="heart" size={22} color="#e63946" />
+                )}
+              </Pressable>
+            </View>
           </View>
 
-          <View style={styles.info}>
+          <ScrollView style={styles.info}>
             <Text>Endereço: {item.endereco}</Text>
             <Text>Categoria: {item.categoria || "Não informado"}</Text>
             <Text>Telefone: {item.telefone || "Não informado"}</Text>
-            <Text>Horários: {item.horarios?.join(", ") || "Não informado"}</Text>
             <Text>
-              Sites: {item.site ? <Text style={styles.link} onPress={abrirSite}>{item.site}</Text> : "Não informado"}
+              Horários: {item.horarios?.join(", ") || "Não informado"}
             </Text>
-            <Text>Avaliação: {item.media_notas ? item.media_notas.toFixed(1) : "Sem nota"}</Text>
-          </View>
-
-          <ScrollView style={styles.comentarios}>
-            <Text style={styles.comentariosTitle}>Comentários:</Text>
-            {avaliacoes.length > 0 
-              ? avaliacoes.map((a) => (
-                  <View key={a.id_avaliacao} style={styles.comentario}>
-                    <Text>Usuário: {a.usuario || "Anônimo"}</Text>
-                    <Text>Comentário: {a.comentario}</Text>
-                    <Text style={styles.date}>{new Date(a.created_at).toLocaleString()}</Text>
-                    {a.id_usuario === id_usuario && (
-                      <Button title="Deletar" color="red" onPress={() => handleDelete(a.id_avaliacao)} />
-                    )}
-                  </View>
-                ))
-              : <Text>Sem comentários</Text>
-            }
+            <Text>
+              Site:{" "}
+              {item.site ? (
+                <Text style={styles.link} onPress={abrirSite}>
+                  {item.site}
+                </Text>
+              ) : (
+                "Não informado"
+              )}
+            </Text>
+            <Text>
+              Avaliação:{" "}
+              {item.media_notas ? item.media_notas.toFixed(1) : "Sem nota"}
+            </Text>
           </ScrollView>
-
-          <TextInput
-            style={styles.input}
-            placeholder="Escreva seu comentário"
-            value={comentario}
-            onChangeText={setComentario}
-          />
-          <Button title="Enviar comentário" onPress={handleCreate} />
 
           <Pressable style={styles.okButton} onPress={onClose}>
             <Text style={styles.okText}>OK</Text>
@@ -152,72 +121,35 @@ export default function EstabelecimentosModal({ visible, onClose, item, userToke
 
 const styles = StyleSheet.create({
   overlay: {
-    flex:1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems:'center'
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   container: {
-    width: '90%',
-    backgroundColor: '#f0f0f0',
+    width: "90%",
+    backgroundColor: "#f0f0f0",
     borderRadius: 12,
     padding: 15,
-    maxHeight: '85%'
+    maxHeight: "85%",
   },
   header: {
-    flexDirection:'row',
-    justifyContent:'space-between',
-    alignItems:'center',
-    marginBottom: 10
+    marginBottom: 10,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
-  title: {
-    fontSize:18,
-    fontWeight:'bold',
-    flex:1
-  },
-  info: {
-    marginBottom: 15
-  },
-  link: {
-    color: '#1e90ff',
-    textDecorationLine:'underline'
-  },
+  title: { fontSize: 18, fontWeight: "bold", flex: 1 },
+  icons: { flexDirection: "row", marginLeft: 10 },
+  iconButton: { marginHorizontal: 5 },
+  info: { marginBottom: 15 },
+  link: { color: "#1e90ff", textDecorationLine: "underline" },
   okButton: {
-    backgroundColor:'#5a6fa1',
-    paddingVertical:8,
-    borderRadius:8,
-    alignItems:'center',
-    marginTop:10
+    backgroundColor: "#5a6fa1",
+    paddingVertical: 8,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 10,
   },
-  okText: {
-    color:'#fff',
-    fontWeight:'bold',
-    fontSize:16
-  },
-  comentarios: {
-    maxHeight:200,
-    marginBottom: 10
-  },
-  comentariosTitle: {
-    fontWeight:'bold',
-    marginBottom:5
-  },
-  comentario: {
-    marginBottom:8,
-    padding:8,
-    backgroundColor:"#fff",
-    borderRadius:6
-  },
-  input: {
-    borderWidth:1,
-    borderColor:"#ccc",
-    borderRadius:8,
-    padding:8,
-    marginBottom:8,
-    backgroundColor:"#fff"
-  },
-  date: {
-    fontSize:12,
-    color:"#666"
-  }
+  okText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
 });
