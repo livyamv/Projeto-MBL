@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -54,18 +53,21 @@ export default function Perfil({ navigation }) {
       const token = await SecureStore.getItemAsync("token");
 
       const formData = new FormData();
-      formData.append("fotoPerfil", {
+      formData.append("imagem", {
         uri,
         name: "foto.jpg",
         type: "image/jpeg",
       });
+      formData.append("id", userId); // já que o back pega pelo body
 
-      await api.put(`/user/${userId}/foto`, formData, {
+      await api.put(`/user`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
         },
       });
+
+      setFotoPerfil(uri);
     } catch (error) {
       console.log(error.response?.data || error);
       Alert.alert("Erro", "Não foi possível atualizar a foto.");
@@ -150,7 +152,8 @@ export default function Perfil({ navigation }) {
             console.log(error.response?.data || error);
             Alert.alert(
               "Erro",
-              error.response?.data?.message || "Não foi possível excluir a conta."
+              error.response?.data?.message ||
+                "Não foi possível excluir a conta."
             );
           }
         },
@@ -178,7 +181,9 @@ export default function Perfil({ navigation }) {
       <TouchableOpacity onPress={escolherOpcaoFoto}>
         <Image
           source={
-            fotoPerfil ? { uri: fotoPerfil } : require("../../assets/pessoa.jpg")
+            fotoPerfil
+              ? { uri: fotoPerfil }
+              : require("../../assets/pessoa.jpg")
           }
           style={styles.fotoPerfil}
         />
@@ -293,4 +298,3 @@ const styles = StyleSheet.create({
   },
   excluirTexto: { color: "red", fontSize: 16, fontWeight: "bold" },
 });
-

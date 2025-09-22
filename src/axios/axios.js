@@ -24,6 +24,13 @@ api.postLogin = (usuario) => api.post("/login", usuario);
 api.getAllUsers = () => api.get("/user");
 api.updateUser = (dadosUsuario) => api.put("/user", dadosUsuario);
 api.deleteUser = (id) => api.delete(`/user/${id}`);
+// Atualizar usuário com imagem (FormData)
+api.updateUserWithImage = (formData) =>
+  api.put("/user", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+
+
 
 /*ROTAS DE ESTABELECIMENTOS*/
 // Buscar lista de estabelecimentos
