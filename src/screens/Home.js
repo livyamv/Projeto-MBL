@@ -12,14 +12,17 @@ import {
 } from "react-native";
 import { AntDesign, Entypo, Feather, MaterialIcons } from "@expo/vector-icons";
 import Logo from "../component/logo";
+import EstabelecimentoModal from "../component/EstabelecimentosModal";
 import api from "../axios/axios";
 
 const { width } = Dimensions.get("window");
 
 export default function Home({ navigation }) {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
   const [estabelecimentos, setEstabelecimentos] = useState([]);
   const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("restaurante");
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const slideAnim = useRef(new Animated.Value(-width * 0.6)).current;
 
@@ -30,21 +33,22 @@ export default function Home({ navigation }) {
         let todos = [];
 
         for (const type of tipos) {
-          const response = await api.getbuscarEstabelecimentos({
-            location: "-20.12345,-47.12345",
-            radius: 5000,
+          const response = await api.getEstabelecimentos({
+            location: "-20.5381,-47.4008",
+            radius: 15000,
             type,
           });
-          console.log(`Tipo ${type} retornou:`, response.data);
 
-          if (Array.isArray(response.data)) {
-            todos = [...todos, ...response.data];
-          } else if (response.data?.estabelecimentos) {
-            todos = [...todos, ...response.data.estabelecimentos];
-          }
+          const dados = response.data?.estabelecimentos || [];
+
+          // Filtra apenas Franca-SP e adiciona propriedade tipo
+          const filtradosFranca = dados
+            .filter((item) => item.endereco?.toLowerCase().includes("franca"))
+            .map((item) => ({ ...item, tipo: type }));
+
+          todos = [...todos, ...filtradosFranca];
         }
 
-        console.log("Todos os estabelecimentos:", todos);
         setEstabelecimentos(todos);
       } catch (error) {
         if (error.response) {
@@ -56,6 +60,7 @@ export default function Home({ navigation }) {
         }
       }
     }
+
     carregarEstabelecimentos();
   }, []);
 
@@ -81,24 +86,36 @@ export default function Home({ navigation }) {
   }
 
   const categorias = [
-    { key: "restaurante", image: require("../../assets/restaurante.png") },
-    { key: "lazer", image: require("../../assets/lazer.png") },
-    { key: "comercio", image: require("../../assets/comercio.png") },
+    { key: "restaurant", image: require("../../assets/restaurante.png") },
+    { key: "park", image: require("../../assets/lazer.png") },
+    { key: "store", image: require("../../assets/comercio.png") },
   ];
 
-  const listaFiltrada = estabelecimentos.filter((item) =>
-    item.nome?.toLowerCase().includes(search.toLowerCase())
-  );
+  // Função de clique na categoria
+  function handleCategoryClick(catKey) {
+    if (selectedCategory === catKey) {
+      setSelectedCategory(null);
+    } else {
+      setSelectedCategory(catKey);
+    }
+  }
+
+  // Filtra por categoria e busca
+  const listaFiltrada = estabelecimentos.filter((item) => {
+    const matchSearch = item.nome?.toLowerCase().includes(search.toLowerCase());
+    const matchCategory = selectedCategory
+      ? item.tipo === selectedCategory
+      : true;
+    return matchSearch && matchCategory;
+  });
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        {/* Ícone do menu no canto esquerdo */}
         <Pressable onPress={toggleSidebar}>
           <Entypo name="menu" size={28} color="#333" />
         </Pressable>
 
-        {/* Logo + frase no canto direito */}
         <View style={styles.logoContainer}>
           <Logo />
           <Text style={styles.subtitle}>
@@ -107,7 +124,6 @@ export default function Home({ navigation }) {
         </View>
       </View>
 
-      {/* Campo de busca */}
       <View style={styles.searchContainer}>
         <TextInput
           placeholder="Pesquisar"
@@ -119,12 +135,11 @@ export default function Home({ navigation }) {
         <AntDesign name="search1" size={20} color="#fff" />
       </View>
 
-      {/* Categorias */}
       <View style={styles.categoriesContainer}>
         {categorias.map((cat) => (
           <Pressable
             key={cat.key}
-            onPress={() => setSelectedCategory(cat.key)}
+            onPress={() => handleCategoryClick(cat.key)}
             style={[
               styles.categoryButton,
               selectedCategory === cat.key && styles.selected,
@@ -135,25 +150,32 @@ export default function Home({ navigation }) {
         ))}
       </View>
 
-      {/* Lista de Estabelecimentos */}
       <FlatList
-        data={listaFiltrada}
-        keyExtractor={(item, index) => String(item.id || index)}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <View style={styles.iconBox} />
-            <Text style={styles.cardText}>{item.nome}</Text>
-          </View>
-        )}
-        style={{ marginTop: 20 }}
-        ListEmptyComponent={
-          <Text style={{ textAlign: "center", marginTop: 20, color: "#555" }}>
-            Nenhum estabelecimento encontrado
-          </Text>
-        }
+  data={listaFiltrada}
+  keyExtractor={(item, index) => `${item.place_id}-${index}`}
+  renderItem={({ item }) => (
+    <Pressable
+      style={styles.card}
+      onPress={() => {
+        setSelectedItem(item);
+        setModalVisible(true);
+      }}
+    >
+      <View style={styles.iconBox} />
+      <Text style={styles.cardText}>{item.nome}</Text>
+    </Pressable>
+  )}
+/>
+
+
+      <EstabelecimentoModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        item={selectedItem}
       />
 
-      {/* Footer */}
+      
+
       <View style={styles.footer}>
         <Pressable style={styles.logoutButton} onPress={handleLogout}>
           <AntDesign name="logout" size={24} color="gray" />
@@ -163,7 +185,6 @@ export default function Home({ navigation }) {
         </Pressable>
       </View>
 
-      {/* Sidebar */}
       {sidebarOpen && (
         <>
           <Pressable style={styles.overlay} onPress={toggleSidebar} />
@@ -192,13 +213,6 @@ export default function Home({ navigation }) {
               <Text style={styles.sidebarItem}>Avaliações</Text>
             </Pressable>
 
-            <Pressable
-              style={styles.sidebarButton}
-              onPress={() => navigation.navigate("Configuracoes")}
-            >
-              <Feather name="settings" size={22} color="#333" />
-              <Text style={styles.sidebarItem}>Configurações</Text>
-            </Pressable>
 
             <Pressable
               style={styles.sidebarButton}
@@ -225,26 +239,20 @@ export default function Home({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#e5e5e5", padding: 20 },
   header: {
-    flexDirection: "row", // menu e logo lado a lado
-    justifyContent: "space-between", // menu à esquerda, logo à direita
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
     marginTop: 40,
     marginBottom: 20,
   },
-
-  logoContainer: {
-    flexDirection: "column", // logo em cima, frase embaixo
-    alignItems: "flex-end", // para ficar alinhado à direita
-  },
-
+  logoContainer: { flexDirection: "column", alignItems: "flex-end" },
   subtitle: {
     fontSize: 13,
     color: "#555",
     marginTop: 4,
     maxWidth: width * 0.6,
-    textAlign: "right", // frase alinhada à direita
+    textAlign: "right",
   },
-
   searchContainer: {
     flexDirection: "row",
     backgroundColor: "#C2C2C2",
