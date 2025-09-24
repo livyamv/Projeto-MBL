@@ -249,9 +249,9 @@ export default function Perfil({ navigation }) {
         <TextInput
           style={styles.input}
           value={email}
+          onChangeText={setEmail}
           placeholder="Email"
           keyboardType="email-address"
-          editable={false}
         />
 
         <TextInput
