@@ -2,7 +2,7 @@ import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 
 const api = axios.create({
-  baseURL: "http://10.89.240.89:3000/projeto_final",
+  baseURL: "http://10.89.240.68:3000/projeto_final",
   headers: { accept: "application/json" },
 });
 
@@ -30,17 +30,17 @@ api.updateUserWithImage = (formData) =>
     headers: { "Content-Type": "multipart/form-data" },
   });
 
-
-
 /*ROTAS DE ESTABELECIMENTOS*/
 api.getEstabelecimentos = (params) => api.get("/buscar", { params });
 api.getEstabelecimentoPorId = (id) => api.get(`/buscar/${id}`);
 
 /*ROTAS DE AVALIAÇÕES*/
 api.createAvaliacao = (avaliacao) => api.post("/avaliacoes", avaliacao);
-api.getAvaliacoes = (google_place_id) => api.get(`/avaliacoes/${google_place_id}`);
+api.getAvaliacoes = (google_place_id) =>
+  api.get(`/avaliacoes/${google_place_id}`);
 api.updateAvaliacao = (avaliacao) => api.put("/avaliacoes", avaliacao);
-api.deleteAvaliacao = (id_avaliacao) => api.delete(`/avaliacoes/${id_avaliacao}`);
+api.deleteAvaliacao = (id_avaliacao) =>
+  api.delete(`/avaliacoes/${id_avaliacao}`);
 
 /*ROTAS DE FAVORITOS*/
 api.addFavorito = (favorito) => api.post("/favoritos", favorito);

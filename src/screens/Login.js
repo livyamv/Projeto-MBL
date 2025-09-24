@@ -8,7 +8,7 @@ import {
   Alert,
 } from "react-native";
 import * as SecureStore from "expo-secure-store";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@ex nm mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm,m.....././po/vector-icons";
 import api from "../axios/axios";
 import Logo from "../component/logo";
 
