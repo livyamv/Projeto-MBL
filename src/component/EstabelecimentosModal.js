@@ -26,17 +26,6 @@ export default function EstabelecimentosModal({ visible, onClose, item }) {
     }
   };
 
-  const abrirNoMaps = () => {
-    if (item.endereco) {
-      const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-        item.endereco
-      )}`;
-      Linking.openURL(url).catch((err) =>
-        console.error("Erro ao abrir no Maps:", err)
-      );
-    }
-  };
-
   const adicionarFavorito = async () => {
     if (!item.place_id) {
       Alert.alert("Erro", "ID do estabelecimento não disponível.");
@@ -44,23 +33,23 @@ export default function EstabelecimentosModal({ visible, onClose, item }) {
     }
 
     setLoading(true);
+
     try {
-      // NÃO envie id_usuario, o token já identifica o usuário
       await api.addFavorito({
         google_place_id: item.place_id,
         nome_estabelecimento: item.nome || "",
         endereco: item.endereco || "",
       });
-
       Alert.alert("Sucesso", "Adicionado aos favoritos!");
     } catch (error) {
       console.error(
-        "Erro ao atualizar favorito:",
+        "Erro ao adicionar favorito:",
         error.response?.data || error
       );
       Alert.alert(
         "Erro",
-        error.response?.data?.message || "Não foi possível favoritar"
+        error.response?.data?.message ||
+          "Não foi possível adicionar aos favoritos"
       );
     } finally {
       setLoading(false);
@@ -74,9 +63,6 @@ export default function EstabelecimentosModal({ visible, onClose, item }) {
           <View style={styles.header}>
             <Text style={styles.title}>{item.nome}</Text>
             <View style={styles.icons}>
-              <Pressable onPress={abrirNoMaps} style={styles.iconButton}>
-                <Icon name="map-marker" size={22} color="#333" />
-              </Pressable>
               <Pressable onPress={adicionarFavorito} style={styles.iconButton}>
                 {loading ? (
                   <ActivityIndicator size="small" color="#e63946" />

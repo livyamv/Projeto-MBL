@@ -6,7 +6,7 @@ const api = axios.create({
   headers: { accept: "application/json" },
 });
 
-// Interceptor para sempre mandar o token (se existir)
+// Interceptor para enviar o token JWT em todas as requisições
 api.interceptors.request.use(
   async (config) => {
     const token = await SecureStore.getItemAsync("token");
@@ -36,15 +36,24 @@ api.getEstabelecimentos = (params) => api.get("/buscar", { params });
 api.getEstabelecimentoPorId = (id) => api.get(`/buscar/${id}`);
 
 /* ROTAS DE AVALIAÇÕES */
-api.createAvaliacao = (avaliacao) => api.post("/avaliacao", avaliacao); // <- singular
+api.createAvaliacao = (avaliacao) => api.post("/avaliacao", avaliacao);
 api.getAvaliacoes = (google_place_id) =>
   api.get(`/avaliacoes/${google_place_id}`);
 api.updateAvaliacao = (avaliacao) => api.put("/avaliacao", avaliacao);
-api.deleteAvaliacao = (id_avaliacao) => api.delete(`/${id_avaliacao}`); // <- igual backend
+api.deleteAvaliacao = (id_avaliacao) => api.delete(`/avaliacao/${id_avaliacao}`);
 
 /* ROTAS DE FAVORITOS */
+// Adicionar favorito
 api.addFavorito = (favorito) => api.post("/favoritos", favorito);
-api.getFavoritos = () => api.get("/favoritos");
+
+// Remover favorito
 api.removeFavorito = (id_favorito) => api.delete(`/favoritos/${id_favorito}`);
+
+api.getFavoritos = async () => {
+  const userId = await SecureStore.getItemAsync("userId");
+  const response = await api.get(`/favoritos/${userId}`);
+  return response.data.favoritos;
+};
+
 
 export default api;

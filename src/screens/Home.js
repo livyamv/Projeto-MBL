@@ -180,9 +180,7 @@ export default function Home({ navigation }) {
         <Pressable style={styles.logoutButton} onPress={handleLogout}>
           <AntDesign name="logout" size={24} color="gray" />
         </Pressable>
-        <Pressable>
-          <AntDesign name="heart" size={28} color="gray" />
-        </Pressable>
+        
       </View>
 
       {sidebarOpen && (
