@@ -17,8 +17,10 @@ import api from "../axios/axios";
 export default function Perfil({ navigation }) {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
+  const [cpf, setCpf] = useState("");
   const [senha, setSenha] = useState(""); // só será enviada se preenchida
   const [fotoPerfil, setFotoPerfil] = useState(null);
+  const [evento, setEvento] = useState(null); // novo estado para evento
 
   // --- Carrega dados do usuário logado ---
   useEffect(() => {
@@ -36,7 +38,13 @@ export default function Perfil({ navigation }) {
         setNome(usuario.nome);
         setEmail(usuario.email);
         setFotoPerfil(usuario.fotoPerfil || null);
+        setCpf(usuario.cpf);
         setSenha(""); // não exibe senha
+
+        // se backend devolver dados do evento
+        if (usuario.evento) {
+          setEvento(usuario.evento);
+        }
       } catch (error) {
         console.log(error.response?.data || error);
         Alert.alert("Erro", "Não foi possível carregar os dados do usuário.");
@@ -115,6 +123,7 @@ export default function Perfil({ navigation }) {
     try {
       const id = await SecureStore.getItemAsync("userId");
       const token = await SecureStore.getItemAsync("token");
+
       if (!id || !token) {
         Alert.alert("Erro", "Usuário não autenticado. Faça login novamente.");
         return;
@@ -124,8 +133,20 @@ export default function Perfil({ navigation }) {
       if (senha) usuarioAtualizado.senha = senha;
 
       const response = await api.updateUser(usuarioAtualizado);
+
+      // --- Atualiza token e sincroniza estado ---
+      if (response.data.token) {
+        await SecureStore.setItemAsync("token", response.data.token);
+      }
+
+      // --- Atualiza email e nome no estado local ---
+      if (response.data.user) {
+        setNome(response.data.user.nome || nome);
+        setEmail(response.data.user.email || email);
+      }
+
       Alert.alert("Sucesso", response.data.message || "Perfil atualizado!");
-      setSenha(""); // limpa o campo de senha
+      setSenha(""); // limpa campo de senha
     } catch (error) {
       console.log(error.response?.data || error);
       Alert.alert(
@@ -178,6 +199,7 @@ export default function Perfil({ navigation }) {
         <Feather name="settings" size={24} color="#fff" />
       </LinearGradient>
 
+      {/* Foto de perfil */}
       <TouchableOpacity onPress={escolherOpcaoFoto}>
         <Image
           source={
@@ -189,6 +211,27 @@ export default function Perfil({ navigation }) {
         />
       </TouchableOpacity>
 
+      {/* Imagem do evento */}
+      {evento?.id_evento && (
+        <View style={{ alignItems: "center", marginTop: 20 }}>
+          <Image
+            source={{
+              uri: `http://localhost:5000/api/v1/evento/imagem/${evento.id_evento}`,
+            }}
+            style={{
+              width: 80,
+              height: 80,
+              borderRadius: 10,
+              resizeMode: "cover",
+            }}
+          />
+          <Text style={{ marginTop: 5, fontSize: 14 }}>
+            Imagem do evento
+          </Text>
+        </View>
+      )}
+
+      {/* Formulário */}
       <View style={styles.form}>
         <TextInput
           style={styles.input}
@@ -198,20 +241,29 @@ export default function Perfil({ navigation }) {
         />
         <TextInput
           style={styles.input}
-          value={email}
-          onChangeText={setEmail}
-          placeholder="Email"
-          keyboardType="email-address"
-        />
-        <TextInput
-          style={styles.input}
           value={senha}
           onChangeText={setSenha}
           placeholder="Nova senha"
           secureTextEntry
         />
+        <TextInput
+          style={styles.input}
+          value={email}
+          onChangeText={setEmail}
+          placeholder="Email"
+          keyboardType="email-address"
+        />
+
+        <TextInput
+          style={styles.input}
+          value={cpf}
+          placeholder="CPF"
+          keyboardType="numeric"
+          editable={false}
+        />
       </View>
 
+      {/* Botões */}
       <View style={styles.botoesBox}>
         <TouchableOpacity style={styles.botao} onPress={atualizarPerfil}>
           <Text style={styles.textoBotao}>Editar perfil</Text>
