@@ -3,41 +3,71 @@ import {
   View,
   Text,
   StyleSheet,
-  TextInput,
-  Dimensions,
-  Pressable,
   FlatList,
+  Pressable,
+  ActivityIndicator,
+  Dimensions,
   Animated,
 } from "react-native";
 import { AntDesign, Entypo, Feather, MaterialIcons } from "@expo/vector-icons";
-import Logo from "../component/logo";
 import api from "../axios/axios";
+import EstabelecimentosModal from "../component/EstabelecimentosModal";
+import Logo from "../component/logo";
 
 const { width } = Dimensions.get("window");
 
-export default function Home({ navigation }) {
-  const [favoritos, setFavoritos] = useState([]); // voltou a ser favoritos
-  const [search, setSearch] = useState("");
+export default function Favoritos({ navigation }) {
+  const [favoritos, setFavoritos] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const { width } = Dimensions.get("window");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const slideAnim = useRef(new Animated.Value(-width * 0.6)).current;
 
-  useEffect(() => {
-    async function carregarFavoritos() {
-      try {
-        const response = await api.get("/favoritos"); // rota correta
-        console.log("Favoritos:", response.data);
+  // Carrega os favoritos do usuário logado
+  const carregarFavoritos = async () => {
+  try {
+    setLoading(true);
 
-        if (Array.isArray(response.data)) {
-          setFavoritos(response.data);
-        } else if (response.data?.favoritos) {
-          setFavoritos(response.data.favoritos);
-        }
-      } catch (error) {
-        console.error("Erro ao carregar favoritos:", error.message);
-      }
+    const userId = await SecureStore.getItemAsync("userId");
+    if (!userId) {
+      console.warn("Usuário não logado");
+      return;
     }
-    carregarFavoritos();
-  }, []);
+
+    // Passa o id_usuario como query ou corpo, dependendo do backend
+    const response = await api.getFavoritos({ id_usuario: userId });
+    
+    setFavoritos(response.data || []);
+  } catch (error) {
+    console.error("Erro ao carregar favoritos:", error.response?.data || error.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
+  // Remove favorito e atualiza lista
+  const removerFavorito = async (google_place_id) => {
+  try {
+    const userId = await SecureStore.getItemAsync("userId");
+    if (!userId) return;
+
+    await api.removeFavorito({ id_usuario: userId, google_place_id });
+
+    setFavoritos((prev) =>
+      prev.filter((fav) => fav.google_place_id !== google_place_id)
+    );
+  } catch (error) {
+    console.error("Erro ao remover favorito:", error.response?.data || error.message);
+  }
+};
+
+  // Abre modal com os detalhes do estabelecimento
+  const abrirModal = (item) => {
+    setSelectedItem(item);
+    setModalVisible(true);
+  };
 
   function handleLogout() {
     navigation.replace("Login");
@@ -60,13 +90,21 @@ export default function Home({ navigation }) {
     }
   }
 
-  const listaFiltrada = favoritos.filter((item) =>
-    item.nome?.toLowerCase().includes(search.toLowerCase())
-  );
+  useEffect(() => {
+    carregarFavoritos();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#333" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      {/* HEADER */}
+      {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={toggleSidebar}>
           <Entypo name="menu" size={28} color="#333" />
@@ -74,46 +112,51 @@ export default function Home({ navigation }) {
 
         <View style={styles.logoContainer}>
           <Logo />
+          <Text style={styles.subtitle}>
+            Grandes Lugares Inspiram Momentos Perfeitos.
+          </Text>
         </View>
       </View>
 
-      {/* CAMPO DE PESQUISA */}
-      <View style={styles.searchContainer}>
-        <TextInput
-          placeholder="Pesquisar nos favoritos"
-          style={styles.searchInput}
-          placeholderTextColor="#555"
-          value={search}
-          onChangeText={setSearch}
-        />
-        <AntDesign name="search1" size={20} color="#fff" />
-      </View>
+      <Text style={styles.title}>Meus Favoritos</Text>
 
-      {/* LISTA DE FAVORITOS */}
       <FlatList
-        data={listaFiltrada}
-        keyExtractor={(item, index) => String(item.id || index)}
+        data={favoritos}
+        keyExtractor={(item, index) =>
+          String(item.id_favorito || item.google_place_id || index)
+        }
         renderItem={({ item }) => (
-          <View style={styles.card}>
-            <Text style={styles.cardText}>{item.nome}</Text>
-            <AntDesign name="heart" size={20} color="red" />
-          </View>
+          <Pressable onPress={() => abrirModal(item)}>
+            <View style={styles.card}>
+              <View>
+                <Text style={styles.cardText}>
+                  {item.nome_estabelecimento || "Sem nome"}
+                </Text>
+                <Text style={styles.cardSub}>{item.endereco || ""}</Text>
+              </View>
+              <Pressable
+                onPress={() => removerFavorito(item.id_favorito)}
+                style={{ padding: 5 }}
+              >
+                <AntDesign name="delete" size={22} color="red" />
+              </Pressable>
+            </View>
+          </Pressable>
         )}
         ListEmptyComponent={
-          <Text style={{ textAlign: "center", marginTop: 20, color: "#555" }}>
-            Nenhum favorito encontrado
-          </Text>
+          <Text style={styles.emptyText}>Nenhum favorito encontrado</Text>
         }
       />
 
-      {/* FOOTER */}
-      <View style={styles.footer}>
-        <Pressable style={styles.logoutButton} onPress={handleLogout}>
-          <AntDesign name="logout" size={24} color="gray" />
-        </Pressable>
-      </View>
+      {selectedItem && (
+        <EstabelecimentosModal
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          item={selectedItem}
+        />
+      )}
 
-      {/* SIDEBAR */}
+      {/* Sidebar */}
       {sidebarOpen && (
         <>
           <Pressable style={styles.overlay} onPress={toggleSidebar} />
@@ -128,26 +171,18 @@ export default function Home({ navigation }) {
 
             <Pressable
               style={styles.sidebarButton}
-              onPress={() => navigation.navigate("Home")}
+              onPress={() => navigation.navigate("Favoritos")}
             >
-              <AntDesign name="home" size={28} color="gray" />
-              <Text style={styles.sidebarItem}>Home</Text>
+              <AntDesign name="hearto" size={22} color="#333" />
+              <Text style={styles.sidebarItem}>Favoritos</Text>
             </Pressable>
 
             <Pressable
               style={styles.sidebarButton}
-              onPress={() => navigation.navigate("Avaliacoes")}
+              onPress={() => navigation.navigate("Avaliacao")}
             >
               <MaterialIcons name="rate-review" size={22} color="#333" />
               <Text style={styles.sidebarItem}>Avaliações</Text>
-            </Pressable>
-
-            <Pressable
-              style={styles.sidebarButton}
-              onPress={() => navigation.navigate("Configuracoes")}
-            >
-              <Feather name="settings" size={22} color="#333" />
-              <Text style={styles.sidebarItem}>Configurações</Text>
             </Pressable>
 
             <Pressable
@@ -173,7 +208,7 @@ export default function Home({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#e5e5e5", padding: 20 },
+  container: { flex: 1, backgroundColor: "#f5f5f5", padding: 20 },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -182,47 +217,45 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   logoContainer: { flexDirection: "column", alignItems: "flex-end" },
-  searchContainer: {
-    flexDirection: "row",
-    backgroundColor: "#C2C2C2",
-    borderRadius: 35,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    alignItems: "center",
-    marginBottom: 20,
+  subtitle: {
+    fontSize: 13,
+    color: "#555",
+    marginTop: 4,
+    maxWidth: width * 0.6,
+    textAlign: "right",
   },
-  searchInput: { flex: 1, fontSize: 16, color: "white" },
+  title: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
+    color: "#333",
+  },
   card: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: "#fff",
     padding: 15,
     marginBottom: 12,
     borderRadius: 10,
-    justifyContent: "space-between",
+    elevation: 2,
   },
-  cardText: { fontSize: 16, color: "#333" },
-  footer: {
-    position: "absolute",
-    bottom: 30,
-    left: 20,
-    right: 20,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  logoutButton: { flexDirection: "row", alignItems: "center", gap: 5 },
+  cardText: { fontSize: 16, color: "#333", fontWeight: "600" },
+  cardSub: { fontSize: 14, color: "#777", marginTop: 2 },
+  emptyText: { textAlign: "center", marginTop: 20, color: "#777" },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  // Sidebar
   sidebar: {
-  position: "absolute",
-  top: 0,
-  bottom: 0,
-  width: width * 0.6,
-  backgroundColor: "#ddd",
-  padding: 20,
-  elevation: 5,
-  zIndex: 100,
-},
-
+    position: "absolute",
+    top: 0,
+    height: "100%",
+    width: width * 0.6,
+    backgroundColor: "#ddd",
+    padding: 20,
+    elevation: 5,
+    zIndex: 100,
+  },
   sidebarButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -241,4 +274,3 @@ const styles = StyleSheet.create({
   },
   bold: { fontWeight: "bold" },
 });
-
