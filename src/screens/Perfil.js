@@ -39,7 +39,6 @@ export default function Perfil({ navigation }) {
       setNome(usuario.nome);
       setEmail(usuario.email);
       setCpf(usuario.cpf);
-      setSenha("");
 
       // Foto: tenta pegar do backend, se não tiver, pega do SecureStore
       if (usuario.fotoPerfil) {
@@ -199,7 +198,7 @@ export default function Perfil({ navigation }) {
         style={styles.header}
       >
         <AntDesign
-          name="arrowleft"
+          name="left"
           size={24}
           color="#fff"
           onPress={() => navigation.navigate("Home")}
@@ -246,13 +245,6 @@ export default function Perfil({ navigation }) {
           value={nome}
           onChangeText={setNome}
           placeholder="Nome"
-        />
-        <TextInput
-          style={styles.input}
-          value={senha}
-          onChangeText={setSenha}
-          placeholder="Nova senha"
-          secureTextEntry
         />
         <TextInput
           style={styles.input}
