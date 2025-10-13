@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { AntDesign, Entypo, Feather, MaterialIcons } from "@expo/vector-icons";
 import Logo from "../component/logo";
-import EstabelecimentoModal from "../component/EstabelecimentosModal";
+import EstabelecimentosModal from "../component/EstabelecimentosModal";
 import api from "../axios/axios";
 
 const { width } = Dimensions.get("window");
@@ -168,7 +168,7 @@ export default function Home({ navigation }) {
 />
 
 
-      <EstabelecimentoModal
+      <EstabelecimentosModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         item={selectedItem}
@@ -180,9 +180,7 @@ export default function Home({ navigation }) {
         <Pressable style={styles.logoutButton} onPress={handleLogout}>
           <AntDesign name="logout" size={24} color="gray" />
         </Pressable>
-        <Pressable>
-          <AntDesign name="heart" size={28} color="gray" />
-        </Pressable>
+        
       </View>
 
       {sidebarOpen && (
@@ -207,7 +205,7 @@ export default function Home({ navigation }) {
 
             <Pressable
               style={styles.sidebarButton}
-              onPress={() => navigation.navigate("Avaliacoes")}
+              onPress={() => navigation.navigate("Avaliacao")}
             >
               <MaterialIcons name="rate-review" size={22} color="#333" />
               <Text style={styles.sidebarItem}>Avaliações</Text>

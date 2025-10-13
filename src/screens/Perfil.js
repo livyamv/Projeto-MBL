@@ -24,63 +24,71 @@ export default function Perfil({ navigation }) {
 
   // --- Carrega dados do usuário logado ---
   useEffect(() => {
-    const carregarUsuario = async () => {
-      try {
-        const userId = await SecureStore.getItemAsync("userId");
-        const token = await SecureStore.getItemAsync("token");
-        if (!userId || !token) return;
-
-        const response = await api.get(`/user/${userId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const usuario = response.data;
-        setNome(usuario.nome);
-        setEmail(usuario.email);
-        setFotoPerfil(usuario.fotoPerfil || null);
-        setCpf(usuario.cpf);
-        setSenha(""); // não exibe senha
-
-        // se backend devolver dados do evento
-        if (usuario.evento) {
-          setEvento(usuario.evento);
-        }
-      } catch (error) {
-        console.log(error.response?.data || error);
-        Alert.alert("Erro", "Não foi possível carregar os dados do usuário.");
-      }
-    };
-
-    carregarUsuario();
-  }, []);
-
-  // --- Função para atualizar foto no backend ---
-  const atualizarFoto = async (uri) => {
+  const carregarUsuario = async () => {
     try {
       const userId = await SecureStore.getItemAsync("userId");
       const token = await SecureStore.getItemAsync("token");
 
-      const formData = new FormData();
-      formData.append("imagem", {
-        uri,
-        name: "foto.jpg",
-        type: "image/jpeg",
-      });
-      formData.append("id", userId); // já que o back pega pelo body
+      if (!userId || !token) return;
 
-      await api.put(`/user`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
+      const response = await api.get(`/user/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      setFotoPerfil(uri);
+      const usuario = response.data.user;
+      setNome(usuario.nome);
+      setEmail(usuario.email);
+      setCpf(usuario.cpf);
+      setSenha("");
+
+      // Foto: tenta pegar do backend, se não tiver, pega do SecureStore
+      if (usuario.fotoPerfil) {
+        setFotoPerfil(usuario.fotoPerfil);
+        await SecureStore.setItemAsync("fotoPerfil", usuario.fotoPerfil);
+      } else {
+        const localFoto = await SecureStore.getItemAsync("fotoPerfil");
+        if (localFoto) setFotoPerfil(localFoto);
+      }
+
+      if (usuario.evento) setEvento(usuario.evento);
+
     } catch (error) {
       console.log(error.response?.data || error);
-      Alert.alert("Erro", "Não foi possível atualizar a foto.");
+      Alert.alert("Erro", "Não foi possível carregar os dados do usuário.");
     }
   };
+
+  carregarUsuario();
+}, []);
+
+  // --- Função para atualizar foto no backend ---
+  const atualizarFoto = async (uri) => {
+  try {
+    setFotoPerfil(uri); // atualiza estado local
+
+    // salva localmente
+    await SecureStore.setItemAsync("fotoPerfil", uri);
+
+    // envia pro backend
+    const userId = await SecureStore.getItemAsync("userId");
+    const token = await SecureStore.getItemAsync("token");
+
+    const formData = new FormData();
+    formData.append("imagem", {
+      uri,
+      name: "foto.jpg",
+      type: "image/jpeg",
+    });
+    formData.append("id", userId);
+
+    await api.updateUserWithImage(formData);
+
+    Alert.alert("Sucesso", "Foto de perfil atualizada!");
+  } catch (error) {
+    console.log(error.response?.data || error);
+    Alert.alert("Erro", "Não foi possível atualizar a foto.");
+  }
+};
 
   // --- Funções de foto ---
   async function escolherFoto() {
@@ -216,7 +224,7 @@ export default function Perfil({ navigation }) {
         <View style={{ alignItems: "center", marginTop: 20 }}>
           <Image
             source={{
-              uri: `http://localhost:5000/api/v1/evento/imagem/${evento.id_evento}`,
+              uri: `http://localhost:3000/api/v1/evento/imagem/${evento.id_evento}`,
             }}
             style={{
               width: 80,
