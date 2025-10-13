@@ -24,71 +24,70 @@ export default function Perfil({ navigation }) {
 
   // --- Carrega dados do usuário logado ---
   useEffect(() => {
-  const carregarUsuario = async () => {
-    try {
-      const userId = await SecureStore.getItemAsync("userId");
-      const token = await SecureStore.getItemAsync("token");
+    const carregarUsuario = async () => {
+      try {
+        const userId = await SecureStore.getItemAsync("userId");
+        const token = await SecureStore.getItemAsync("token");
 
-      if (!userId || !token) return;
+        if (!userId || !token) return;
 
-      const response = await api.get(`/user/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+        const response = await api.get(`/user/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-      const usuario = response.data.user;
-      setNome(usuario.nome);
-      setEmail(usuario.email);
-      setCpf(usuario.cpf);
-      setSenha("");
+        const usuario = response.data.user;
+        setNome(usuario.nome);
+        setEmail(usuario.email);
+        setCpf(usuario.cpf);
+        setSenha("");
 
-      // Foto: tenta pegar do backend, se não tiver, pega do SecureStore
-      if (usuario.fotoPerfil) {
-        setFotoPerfil(usuario.fotoPerfil);
-        await SecureStore.setItemAsync("fotoPerfil", usuario.fotoPerfil);
-      } else {
-        const localFoto = await SecureStore.getItemAsync("fotoPerfil");
-        if (localFoto) setFotoPerfil(localFoto);
+        // Foto: tenta pegar do backend, se não tiver, pega do SecureStore
+        if (usuario.fotoPerfil) {
+          setFotoPerfil(usuario.fotoPerfil);
+          await SecureStore.setItemAsync("fotoPerfil", usuario.fotoPerfil);
+        } else {
+          const localFoto = await SecureStore.getItemAsync("fotoPerfil");
+          if (localFoto) setFotoPerfil(localFoto);
+        }
+
+        if (usuario.evento) setEvento(usuario.evento);
+      } catch (error) {
+        console.log(error.response?.data || error);
+        Alert.alert("Erro", "Não foi possível carregar os dados do usuário.");
       }
+    };
 
-      if (usuario.evento) setEvento(usuario.evento);
-
-    } catch (error) {
-      console.log(error.response?.data || error);
-      Alert.alert("Erro", "Não foi possível carregar os dados do usuário.");
-    }
-  };
-
-  carregarUsuario();
-}, []);
+    carregarUsuario();
+  }, []);
 
   // --- Função para atualizar foto no backend ---
   const atualizarFoto = async (uri) => {
-  try {
-    setFotoPerfil(uri); // atualiza estado local
+    try {
+      setFotoPerfil(uri); // atualiza estado local
 
-    // salva localmente
-    await SecureStore.setItemAsync("fotoPerfil", uri);
+      // salva localmente
+      await SecureStore.setItemAsync("fotoPerfil", uri);
 
-    // envia pro backend
-    const userId = await SecureStore.getItemAsync("userId");
-    const token = await SecureStore.getItemAsync("token");
+      // envia pro backend
+      const userId = await SecureStore.getItemAsync("userId");
+      const token = await SecureStore.getItemAsync("token");
 
-    const formData = new FormData();
-    formData.append("imagem", {
-      uri,
-      name: "foto.jpg",
-      type: "image/jpeg",
-    });
-    formData.append("id", userId);
+      const formData = new FormData();
+      formData.append("imagem", {
+        uri,
+        name: "foto.jpg",
+        type: "image/jpeg",
+      });
+      formData.append("id", userId);
 
-    await api.updateUserWithImage(formData);
+      await api.updateUserWithImage(formData);
 
-    Alert.alert("Sucesso", "Foto de perfil atualizada!");
-  } catch (error) {
-    console.log(error.response?.data || error);
-    Alert.alert("Erro", "Não foi possível atualizar a foto.");
-  }
-};
+      Alert.alert("Sucesso", "Foto de perfil atualizada!");
+    } catch (error) {
+      console.log(error.response?.data || error);
+      Alert.alert("Erro", "Não foi possível atualizar a foto.");
+    }
+  };
 
   // --- Funções de foto ---
   async function escolherFoto() {
@@ -199,7 +198,7 @@ export default function Perfil({ navigation }) {
         style={styles.header}
       >
         <AntDesign
-          name="arrowleft"
+          name="left"
           size={24}
           color="#fff"
           onPress={() => navigation.navigate("Home")}
@@ -233,9 +232,7 @@ export default function Perfil({ navigation }) {
               resizeMode: "cover",
             }}
           />
-          <Text style={{ marginTop: 5, fontSize: 14 }}>
-            Imagem do evento
-          </Text>
+          <Text style={{ marginTop: 5, fontSize: 14 }}>Imagem do evento</Text>
         </View>
       )}
 

@@ -13,6 +13,8 @@ import { AntDesign, Entypo, Feather, MaterialIcons } from "@expo/vector-icons";
 import api from "../axios/axios";
 import EstabelecimentosModal from "../component/EstabelecimentosModal";
 import Logo from "../component/logo";
+import * as SecureStore from "expo-secure-store";
+
 
 const { width } = Dimensions.get("window");
 
