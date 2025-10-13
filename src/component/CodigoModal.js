@@ -134,4 +134,8 @@ const styles = StyleSheet.create({
     color: "#FF7A7A",
     fontSize: 16,
   },
+<<<<<<< HEAD
 });
+=======
+});
+>>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83

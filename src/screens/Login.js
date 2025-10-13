@@ -11,7 +11,11 @@ import * as SecureStore from "expo-secure-store";
 import { Ionicons } from "@expo/vector-icons";
 import api from "../axios/axios";
 import Logo from "../component/logo";
+<<<<<<< HEAD
 import RedefinirSenhaModal from "../component/RedefinirSenhaModal";
+=======
+import CodigoModal from "../component/RedefinirSenhaModal"; 
+>>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83
 
 export default function Login({ navigation }) {
   const [usuario, setUsuario] = useState({
@@ -112,7 +116,11 @@ export default function Login({ navigation }) {
       </TouchableOpacity>
 
       {/* Modal de redefinição */}
+<<<<<<< HEAD
       <RedefinirSenhaModal
+=======
+      <CodigoModal
+>>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83
         visible={modalVisible}
         email={usuario.email}
         onClose={() => setModalVisible(false)}
@@ -192,4 +200,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#000",
   },
+<<<<<<< HEAD
 });
+=======
+});
+>>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83

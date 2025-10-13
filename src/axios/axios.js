@@ -36,11 +36,17 @@ api.getEstabelecimentoPorId = (id) => api.get(`/buscar/${id}`);
 
 /*ROTAS DE AVALIAÇÕES*/
 api.createAvaliacao = (avaliacao) => api.post("/avaliacao", avaliacao);
+<<<<<<< HEAD
 api.getAvaliacoesUsuario = () => api.get("/avaliacao");
 api.getAvaliacoesPorLocal = (google_place_id) =>
   api.get(`/avaliacoes/${google_place_id}`);
 api.updateAvaliacao = (avaliacao) => api.put("/avaliacoes", avaliacao);
 api.deleteAvaliacao = (id_avaliacao) => api.delete(`/avaliacao/${id_avaliacao}`);
+=======
+api.getAvaliacoes = (google_place_id) =>
+  api.get(`/avaliacoes/${google_place_id}`);
+api.updateAvaliacao = (avaliacao) => api.put("/avaliacoes", avaliacao);
+>>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83
 
 /*ROTAS DE FAVORITOS*/
 api.addFavorito = (favorito) => api.post("/favoritos", favorito);
@@ -52,4 +58,8 @@ api.confirmarCodigo = ({ email, code }) => api.post("/user/confirm", { email, co
 api.solicitarRedefinicaoSenha = (email) => api.post("/user/redefinir", { email });
 api.resetarSenha = (email, code, novaSenha) => api.post("/user/reset-password", { email, code, novaSenha });
 
+<<<<<<< HEAD
 export default api;
+=======
+export default api;
+>>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83

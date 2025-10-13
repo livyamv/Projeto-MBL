@@ -8,7 +8,10 @@ import {
   Image,
   Pressable,
   FlatList,
+<<<<<<< HEAD
   ActivityIndicator, // Importando o ActivityIndicator
+=======
+>>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83
 } from "react-native";
 import { AntDesign, Entypo } from "@expo/vector-icons";
 import Logo from "../component/logo";
@@ -26,6 +29,7 @@ export default function Home({ navigation }) {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+<<<<<<< HEAD
   const [userToken, setUserToken] = useState(null);
   const [usuario, setUsuario] = useState(null);
   const [loading, setLoading] = useState(true); // Estado de carregamento
@@ -43,6 +47,8 @@ export default function Home({ navigation }) {
     }
     carregarUsuario();
   }, []);
+=======
+>>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83
 
   useEffect(() => {
     async function carregarEstabelecimentos() {
@@ -100,10 +106,18 @@ export default function Home({ navigation }) {
     { key: "store", image: require("../../assets/comercio.png") },
   ];
 
+<<<<<<< HEAD
+=======
+  // Clique em categoria
+>>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83
   function handleCategoryClick(catKey) {
     setSelectedCategory(selectedCategory === catKey ? null : catKey);
   }
 
+<<<<<<< HEAD
+=======
+  // Filtro de busca e categoria
+>>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83
   const listaFiltrada = estabelecimentos.filter((item) => {
     const matchSearch = item.nome?.toLowerCase().includes(search.toLowerCase());
     const matchCategory = selectedCategory
@@ -156,6 +170,7 @@ export default function Home({ navigation }) {
         ))}
       </View>
 
+<<<<<<< HEAD
       {/* Indicador de carregamento */}
       {loading ? (
         <View style={styles.loaderContainer}>
@@ -180,6 +195,26 @@ export default function Home({ navigation }) {
           contentContainerStyle={{ paddingBottom: 120, paddingTop: 20 }}
         />
       )}
+=======
+      {/* LISTA DE ESTABELECIMENTOS */}
+      <FlatList
+        data={listaFiltrada}
+        keyExtractor={(item, index) => `${item.place_id}-${index}`}
+        renderItem={({ item }) => (
+          <Pressable
+            style={styles.card}
+            onPress={() => {
+              setSelectedItem(item);
+              setModalVisible(true);
+            }}
+          >
+            <View style={styles.iconBox} />
+            <Text style={styles.cardText}>{item.nome}</Text>
+          </Pressable>
+        )}
+        contentContainerStyle={{ paddingBottom: 120 }}
+      />
+>>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83
 
       {/* MODAL DE DETALHES */}
       {selectedItem && (
@@ -187,8 +222,11 @@ export default function Home({ navigation }) {
           visible={modalVisible}
           onClose={() => setModalVisible(false)}
           item={selectedItem}
+<<<<<<< HEAD
           userToken={userToken}
           id_usuario={usuario?.id_usuario}
+=======
+>>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83
         />
       )}
 
@@ -284,6 +322,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   logoutButton: { flexDirection: "row", alignItems: "center", gap: 5 },
+<<<<<<< HEAD
   loaderContainer: {
     flex: 1,
     justifyContent: "center",
@@ -291,3 +330,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
 });
+=======
+});
+>>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83

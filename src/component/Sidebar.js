@@ -37,6 +37,7 @@ export default function Sidebar({ isOpen, onClose, navigation, onLogout }) {
       <Animated.View style={[styles.sidebar, { left: slideAnim }]}>
         <Pressable
           style={styles.sidebarButton}
+<<<<<<< HEAD
           onPress={() => handleNavigation("Home")}
         >
           <AntDesign name="home" size={22} color="#333" />
@@ -45,6 +46,8 @@ export default function Sidebar({ isOpen, onClose, navigation, onLogout }) {
 
         <Pressable
           style={styles.sidebarButton}
+=======
+>>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83
           onPress={() => handleNavigation("Perfil")}
         >
           <AntDesign name="user" size={22} color="#333" />
