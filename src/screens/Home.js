@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,11 +8,11 @@ import {
   Image,
   Pressable,
   FlatList,
-  Animated,
 } from "react-native";
-import { AntDesign, Entypo, Feather, MaterialIcons } from "@expo/vector-icons";
+import { AntDesign, Entypo } from "@expo/vector-icons";
 import Logo from "../component/logo";
 import EstabelecimentosModal from "../component/EstabelecimentosModal";
+import Sidebar from "../component/Sidebar";
 import api from "../axios/axios";
 
 const { width } = Dimensions.get("window");
@@ -24,7 +24,6 @@ export default function Home({ navigation }) {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const slideAnim = useRef(new Animated.Value(-width * 0.6)).current;
 
   useEffect(() => {
     async function carregarEstabelecimentos() {
@@ -43,7 +42,10 @@ export default function Home({ navigation }) {
 
           // Filtra apenas Franca-SP e adiciona propriedade tipo
           const filtradosFranca = dados
-            .filter((item) => item.endereco?.toLowerCase().includes("franca"))
+            .filter(
+              (item) =>
+                item.endereco?.toLowerCase()?.includes("franca") ?? false
+            )
             .map((item) => ({ ...item, tipo: type }));
 
           todos = [...todos, ...filtradosFranca];
@@ -69,20 +71,7 @@ export default function Home({ navigation }) {
   }
 
   function toggleSidebar() {
-    if (sidebarOpen) {
-      Animated.timing(slideAnim, {
-        toValue: -width * 0.6,
-        duration: 300,
-        useNativeDriver: false,
-      }).start(() => setSidebarOpen(false));
-    } else {
-      setSidebarOpen(true);
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: false,
-      }).start();
-    }
+    setSidebarOpen(!sidebarOpen);
   }
 
   const categorias = [
@@ -91,16 +80,12 @@ export default function Home({ navigation }) {
     { key: "store", image: require("../../assets/comercio.png") },
   ];
 
-  // Função de clique na categoria
+  // Clique em categoria
   function handleCategoryClick(catKey) {
-    if (selectedCategory === catKey) {
-      setSelectedCategory(null);
-    } else {
-      setSelectedCategory(catKey);
-    }
+    setSelectedCategory(selectedCategory === catKey ? null : catKey);
   }
 
-  // Filtra por categoria e busca
+  // Filtro de busca e categoria
   const listaFiltrada = estabelecimentos.filter((item) => {
     const matchSearch = item.nome?.toLowerCase().includes(search.toLowerCase());
     const matchCategory = selectedCategory
@@ -111,6 +96,7 @@ export default function Home({ navigation }) {
 
   return (
     <View style={styles.container}>
+      {/* HEADER */}
       <View style={styles.header}>
         <Pressable onPress={toggleSidebar}>
           <Entypo name="menu" size={28} color="#333" />
@@ -124,6 +110,7 @@ export default function Home({ navigation }) {
         </View>
       </View>
 
+      {/* BARRA DE PESQUISA */}
       <View style={styles.searchContainer}>
         <TextInput
           placeholder="Pesquisar"
@@ -132,9 +119,10 @@ export default function Home({ navigation }) {
           value={search}
           onChangeText={setSearch}
         />
-        <AntDesign name="search1" size={20} color="#fff" />
+        <AntDesign name="search" size={20} color="#fff" />
       </View>
 
+      {/* CATEGORIAS */}
       <View style={styles.categoriesContainer}>
         {categorias.map((cat) => (
           <Pressable
@@ -150,86 +138,48 @@ export default function Home({ navigation }) {
         ))}
       </View>
 
+      {/* LISTA DE ESTABELECIMENTOS */}
       <FlatList
-  data={listaFiltrada}
-  keyExtractor={(item, index) => `${item.place_id}-${index}`}
-  renderItem={({ item }) => (
-    <Pressable
-      style={styles.card}
-      onPress={() => {
-        setSelectedItem(item);
-        setModalVisible(true);
-      }}
-    >
-      <View style={styles.iconBox} />
-      <Text style={styles.cardText}>{item.nome}</Text>
-    </Pressable>
-  )}
-/>
-
-
-      <EstabelecimentosModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        item={selectedItem}
+        data={listaFiltrada}
+        keyExtractor={(item, index) => `${item.place_id}-${index}`}
+        renderItem={({ item }) => (
+          <Pressable
+            style={styles.card}
+            onPress={() => {
+              setSelectedItem(item);
+              setModalVisible(true);
+            }}
+          >
+            <View style={styles.iconBox} />
+            <Text style={styles.cardText}>{item.nome}</Text>
+          </Pressable>
+        )}
+        contentContainerStyle={{ paddingBottom: 120 }}
       />
 
-      
+      {/* MODAL DE DETALHES */}
+      {selectedItem && (
+        <EstabelecimentosModal
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          item={selectedItem}
+        />
+      )}
 
+      {/* FOOTER */}
       <View style={styles.footer}>
         <Pressable style={styles.logoutButton} onPress={handleLogout}>
           <AntDesign name="logout" size={24} color="gray" />
         </Pressable>
-        
       </View>
 
-      {sidebarOpen && (
-        <>
-          <Pressable style={styles.overlay} onPress={toggleSidebar} />
-          <Animated.View style={[styles.sidebar, { left: slideAnim }]}>
-            <Pressable
-              style={styles.sidebarButton}
-              onPress={() => navigation.navigate("Perfil")}
-            >
-              <AntDesign name="user" size={22} color="#333" />
-              <Text style={styles.sidebarItem}>Perfil</Text>
-            </Pressable>
-
-            <Pressable
-              style={styles.sidebarButton}
-              onPress={() => navigation.navigate("Favoritos")}
-            >
-              <AntDesign name="hearto" size={22} color="#333" />
-              <Text style={styles.sidebarItem}>Favoritos</Text>
-            </Pressable>
-
-            <Pressable
-              style={styles.sidebarButton}
-              onPress={() => navigation.navigate("Avaliacao")}
-            >
-              <MaterialIcons name="rate-review" size={22} color="#333" />
-              <Text style={styles.sidebarItem}>Avaliações</Text>
-            </Pressable>
-
-
-            <Pressable
-              style={styles.sidebarButton}
-              onPress={() => navigation.navigate("SobreNos")}
-            >
-              <Feather name="info" size={22} color="#333" />
-              <Text style={[styles.sidebarItem, styles.bold]}>Sobre Nós</Text>
-            </Pressable>
-
-            <Pressable
-              style={[styles.sidebarButton, { marginTop: "auto" }]}
-              onPress={handleLogout}
-            >
-              <AntDesign name="logout" size={22} color="black" />
-              <Text style={styles.sidebarItem}>Sair</Text>
-            </Pressable>
-          </Animated.View>
-        </>
-      )}
+      {/* SIDEBAR COMPONENT */}
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        navigation={navigation}
+        onLogout={handleLogout}
+      />
     </View>
   );
 }
@@ -307,31 +257,4 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   logoutButton: { flexDirection: "row", alignItems: "center", gap: 5 },
-  sidebar: {
-    position: "absolute",
-    top: 0,
-    height: "100%",
-    width: width * 0.6,
-    backgroundColor: "#ddd",
-    padding: 20,
-    elevation: 5,
-    zIndex: 100,
-  },
-  sidebarButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 15,
-    gap: 10,
-  },
-  sidebarItem: { fontSize: 18, color: "#333" },
-  overlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    zIndex: 50,
-  },
-  bold: { fontWeight: "bold" },
 });
