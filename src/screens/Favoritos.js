@@ -13,8 +13,11 @@ import { AntDesign, Entypo, Feather, MaterialIcons } from "@expo/vector-icons";
 import api from "../axios/axios";
 import EstabelecimentosModal from "../component/EstabelecimentosModal";
 import Logo from "../component/logo";
+<<<<<<< HEAD
 import * as SecureStore from "expo-secure-store";
 
+=======
+>>>>>>> 367a0a56777f8a194259779357d9d6e76cd32132
 
 const { width } = Dimensions.get("window");
 
@@ -29,6 +32,7 @@ export default function Favoritos({ navigation }) {
 
   // Carrega os favoritos do usuário logado
   const carregarFavoritos = async () => {
+<<<<<<< HEAD
   try {
     setLoading(true);
 
@@ -64,6 +68,30 @@ export default function Favoritos({ navigation }) {
     console.error("Erro ao remover favorito:", error.response?.data || error.message);
   }
 };
+=======
+    try {
+      setLoading(true);
+      const response = await api.getFavoritos();
+      setFavoritos(response);
+    } catch (error) {
+      console.error("Erro ao carregar favoritos:", error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Remove favorito e atualiza lista
+  const removerFavorito = async (id_favorito) => {
+    try {
+      await api.removeFavorito(id_favorito);
+      setFavoritos((prev) =>
+        prev.filter((fav) => fav.id_favorito !== id_favorito)
+      );
+    } catch (error) {
+      console.error("Erro ao remover favorito:", error.message);
+    }
+  };
+>>>>>>> 367a0a56777f8a194259779357d9d6e76cd32132
 
   // Abre modal com os detalhes do estabelecimento
   const abrirModal = (item) => {
@@ -275,4 +303,8 @@ const styles = StyleSheet.create({
     zIndex: 50,
   },
   bold: { fontWeight: "bold" },
+<<<<<<< HEAD
 });
+=======
+});
+>>>>>>> 367a0a56777f8a194259779357d9d6e76cd32132

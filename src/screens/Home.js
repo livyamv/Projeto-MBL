@@ -12,7 +12,10 @@ import {
 import { AntDesign, Entypo } from "@expo/vector-icons";
 import Logo from "../component/logo";
 import EstabelecimentosModal from "../component/EstabelecimentosModal";
+<<<<<<< HEAD
 import Sidebar from "../component/Sidebar";
+=======
+>>>>>>> 367a0a56777f8a194259779357d9d6e76cd32132
 import api from "../axios/axios";
 import * as SecureStore from "expo-secure-store";
 
@@ -154,6 +157,7 @@ export default function Home({ navigation }) {
 
       {/* LISTA DE ESTABELECIMENTOS */}
       <FlatList
+<<<<<<< HEAD
         data={listaFiltrada}
         keyExtractor={(item, index) => `${item.place_id}-${index}`}
         renderItem={({ item }) => (
@@ -169,6 +173,29 @@ export default function Home({ navigation }) {
           </Pressable>
         )}
         contentContainerStyle={{ paddingBottom: 120 }}
+=======
+  data={listaFiltrada}
+  keyExtractor={(item, index) => `${item.place_id}-${index}`}
+  renderItem={({ item }) => (
+    <Pressable
+      style={styles.card}
+      onPress={() => {
+        setSelectedItem(item);
+        setModalVisible(true);
+      }}
+    >
+      <View style={styles.iconBox} />
+      <Text style={styles.cardText}>{item.nome}</Text>
+    </Pressable>
+  )}
+/>
+
+
+      <EstabelecimentosModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        item={selectedItem}
+>>>>>>> 367a0a56777f8a194259779357d9d6e76cd32132
       />
 
       {/* MODAL DE DETALHES */}
@@ -186,6 +213,7 @@ export default function Home({ navigation }) {
         <Pressable style={styles.logoutButton} onPress={handleLogout}>
           <AntDesign name="logout" size={24} color="gray" />
         </Pressable>
+<<<<<<< HEAD
       </View>
 
       {/* SIDEBAR */}
@@ -195,6 +223,58 @@ export default function Home({ navigation }) {
         navigation={navigation}
         onLogout={handleLogout}
       />
+=======
+        
+      </View>
+
+      {sidebarOpen && (
+        <>
+          <Pressable style={styles.overlay} onPress={toggleSidebar} />
+          <Animated.View style={[styles.sidebar, { left: slideAnim }]}>
+            <Pressable
+              style={styles.sidebarButton}
+              onPress={() => navigation.navigate("Perfil")}
+            >
+              <AntDesign name="user" size={22} color="#333" />
+              <Text style={styles.sidebarItem}>Perfil</Text>
+            </Pressable>
+
+            <Pressable
+              style={styles.sidebarButton}
+              onPress={() => navigation.navigate("Favoritos")}
+            >
+              <AntDesign name="hearto" size={22} color="#333" />
+              <Text style={styles.sidebarItem}>Favoritos</Text>
+            </Pressable>
+
+            <Pressable
+              style={styles.sidebarButton}
+              onPress={() => navigation.navigate("Avaliacao")}
+            >
+              <MaterialIcons name="rate-review" size={22} color="#333" />
+              <Text style={styles.sidebarItem}>Avaliações</Text>
+            </Pressable>
+
+
+            <Pressable
+              style={styles.sidebarButton}
+              onPress={() => navigation.navigate("SobreNos")}
+            >
+              <Feather name="info" size={22} color="#333" />
+              <Text style={[styles.sidebarItem, styles.bold]}>Sobre Nós</Text>
+            </Pressable>
+
+            <Pressable
+              style={[styles.sidebarButton, { marginTop: "auto" }]}
+              onPress={handleLogout}
+            >
+              <AntDesign name="logout" size={22} color="black" />
+              <Text style={styles.sidebarItem}>Sair</Text>
+            </Pressable>
+          </Animated.View>
+        </>
+      )}
+>>>>>>> 367a0a56777f8a194259779357d9d6e76cd32132
     </View>
   );
 }
