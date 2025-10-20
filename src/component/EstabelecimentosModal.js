@@ -16,15 +16,10 @@ import {
   Platform,
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
-<<<<<<< HEAD
-
 import api from "../axios/axios";
-
-=======
 import MapView, { Marker } from "react-native-maps";
 import api from "../axios/axios";
 
->>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83
 export default function EstabelecimentosModal({
   visible,
   onClose,
@@ -42,10 +37,7 @@ export default function EstabelecimentosModal({
   const [loadingAval, setLoadingAval] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-<<<<<<< HEAD
   // Buscar favoritos do usuário
-=======
->>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83
   useEffect(() => {
     if (!visible || !item || !item.id || !id_usuario) return;
 
@@ -81,7 +73,6 @@ export default function EstabelecimentosModal({
     };
   }, [visible, item, id_usuario]);
 
-<<<<<<< HEAD
   // Buscar avaliações do lugar
   const fetchAvaliacoes = async () => {
     if (!item || !item.place_id) return;
@@ -95,7 +86,7 @@ export default function EstabelecimentosModal({
     } catch (error) {
       console.error(
         "Erro ao buscar avaliações do lugar:",
-=======
+
   const fetchAvaliacoes = async () => {
     if (!item || !item.id) return;
     try {
@@ -105,7 +96,6 @@ export default function EstabelecimentosModal({
     } catch (error) {
       console.error(
         "Erro ao buscar avaliações:",
->>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83
         error.response?.data || error.message
       );
     } finally {
@@ -114,11 +104,9 @@ export default function EstabelecimentosModal({
   };
 
   useEffect(() => {
-<<<<<<< HEAD
     if (visible && item && item.place_id) fetchAvaliacoes();
-=======
+    
     if (visible && item && item.id) fetchAvaliacoes();
->>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83
   }, [visible, item]);
 
   // Abrir site do estabelecimento
@@ -132,11 +120,10 @@ export default function EstabelecimentosModal({
   // Adicionar/remover favorito
   const toggleFavorito = async () => {
     try {
-<<<<<<< HEAD
       if (!id_usuario) return Alert.alert("Erro", "Usuário não identificado.");
       if (!item?.id)
         return Alert.alert("Erro", "ID do estabelecimento não encontrado.");
-=======
+
       if (!id_usuario) {
         return Alert.alert("Erro", "Usuário não identificado.");
       }
@@ -144,7 +131,6 @@ export default function EstabelecimentosModal({
       if (!item?.id) {
         return Alert.alert("Erro", "ID do estabelecimento não encontrado.");
       }
->>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83
 
       setLoadingFav(true);
 
@@ -155,10 +141,7 @@ export default function EstabelecimentosModal({
           nome_estabelecimento: item.nome,
           endereco: item.endereco,
         };
-<<<<<<< HEAD
-=======
 
->>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83
         const response = await api.addFavorito(payload);
         setFavorito(true);
         setFavoritoId(response.data?.id_favorito ?? null);
@@ -193,10 +176,7 @@ export default function EstabelecimentosModal({
     }
   };
 
-<<<<<<< HEAD
   // Criar comentário
-=======
->>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83
   const handleCreate = async () => {
     if (!userToken) return Alert.alert("Erro", "Usuário não autenticado.");
     if (!comentario.trim())
@@ -208,11 +188,8 @@ export default function EstabelecimentosModal({
       setSubmitting(true);
       const avaliacao = {
         id_usuario,
-<<<<<<< HEAD
         google_place_id: item.place_id,
-=======
         google_place_id: item.id,
->>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83
         comentario: comentario.trim(),
         nota,
         nome_estabelecimento: item.nome,
@@ -233,8 +210,6 @@ export default function EstabelecimentosModal({
       Alert.alert("Erro", "Não foi possível enviar o comentário.");
     } finally {
       setSubmitting(false);
-<<<<<<< HEAD
-=======
     }
   };
 
@@ -248,7 +223,6 @@ export default function EstabelecimentosModal({
         error.response?.data || error.message
       );
       Alert.alert("Erro", "Não foi possível deletar o comentário.");
->>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83
     }
   };
 
@@ -281,8 +255,6 @@ export default function EstabelecimentosModal({
               </View>
             </View>
 
-<<<<<<< HEAD
-=======
             {/* MAPA FORA DO SCROLLVIEW */}
             {item.lat && item.lng && (
               <View style={styles.mapContainer}>
@@ -309,7 +281,6 @@ export default function EstabelecimentosModal({
               </View>
             )}
 
->>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83
             <View style={styles.body}>
               <ScrollView showsVerticalScrollIndicator={true}>
                 <Text style={styles.infoText}>Endereço: {item.endereco}</Text>
@@ -332,14 +303,13 @@ export default function EstabelecimentosModal({
                 </View>
 
                 <Text style={styles.infoText}>
-<<<<<<< HEAD
                   Avaliação:{" "}
                   {mediaNotas !== null
                     ? mediaNotas.toFixed(1)
                     : "Sem avaliação"}
-=======
+
                   Avaliação: {item.media_notas?.toFixed(1) || "Sem avaliação"}
->>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83
+
                 </Text>
 
                 <Text style={styles.sectionTitle}>Comentários:</Text>
@@ -361,13 +331,10 @@ export default function EstabelecimentosModal({
                         <Text style={styles.commentRating}>
                           ⭐ {avaliacao.nota}/5
                         </Text>
-<<<<<<< HEAD
-=======
                         <Button
                           title="Deletar"
                           onPress={() => handleDelete(avaliacao.id_avaliacao)}
                         />
->>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83
                       </View>
                     ))}
                   </View>
@@ -420,13 +387,10 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
-<<<<<<< HEAD
-=======
   },
   containerWrapper: {
     width: "100%",
     alignItems: "center",
->>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83
   },
   containerWrapper: { width: "100%", alignItems: "center" },
   container: {
@@ -438,20 +402,16 @@ const styles = StyleSheet.create({
     borderColor: "rgba(72, 85, 132, 0.80)",
     flexDirection: "column",
   },
-<<<<<<< HEAD
   header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 10 },
-=======
   header: {
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 10,
   },
->>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83
   headerContent: {
     flexDirection: "row",
     alignItems: "flex-start",
     justifyContent: "space-between",
-<<<<<<< HEAD
   },
   titleContainer: { flex: 1, alignItems: "center" },
   favoriteButton: { padding: 5, position: "absolute", right: 20, top: 20 },
@@ -482,7 +442,6 @@ const styles = StyleSheet.create({
   commentUser: { fontWeight: "600", marginBottom: 5 },
   commentText: { fontSize: 14, marginBottom: 5, color: "#333" },
   commentRating: { marginBottom: 8 },
-=======
   },
   titleContainer: {
     flex: 1,
@@ -557,13 +516,10 @@ const styles = StyleSheet.create({
   commentRating: {
     marginBottom: 8,
   },
->>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83
   ratingContainer: {
     flexDirection: "row",
     justifyContent: "center",
     marginBottom: 15,
-<<<<<<< HEAD
-=======
   },
   starButton: {
     marginHorizontal: 10,
@@ -571,7 +527,6 @@ const styles = StyleSheet.create({
   },
   star: {
     fontSize: 32,
->>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83
   },
   starButton: { marginHorizontal: 10, padding: 5 },
   star: { fontSize: 32 },
@@ -584,7 +539,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     minHeight: 80,
     textAlignVertical: "top",
-<<<<<<< HEAD
   },
   closeButton: {
     backgroundColor: "#5A6FA1",
@@ -600,7 +554,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
-=======
   },
   closeButton: {
     backgroundColor: "#5A6FA1",
@@ -615,5 +568,4 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontWeight: "600",
   },
-});
->>>>>>> 7b89432b89c4865b73e8d487e50bd3b7023f7d83
+
