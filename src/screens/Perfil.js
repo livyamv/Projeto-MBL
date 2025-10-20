@@ -1,3 +1,5 @@
+// PERFIL.JS - Corrigido e limpo
+
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -18,79 +20,68 @@ export default function Perfil({ navigation }) {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [cpf, setCpf] = useState("");
-  const [senha, setSenha] = useState(""); // só será enviada se preenchida
+  const [senha, setSenha] = useState("");
   const [fotoPerfil, setFotoPerfil] = useState(null);
-  const [evento, setEvento] = useState(null); // novo estado para evento
+  const [evento, setEvento] = useState(null);
 
-  // --- Carrega dados do usuário logado ---
   useEffect(() => {
-  const carregarUsuario = async () => {
-    try {
-      const userId = await SecureStore.getItemAsync("userId");
-      const token = await SecureStore.getItemAsync("token");
+    const carregarUsuario = async () => {
+      try {
+        const userId = await SecureStore.getItemAsync("userId");
+        const token = await SecureStore.getItemAsync("token");
 
-      if (!userId || !token) return;
+        if (!userId || !token) return;
 
-      const response = await api.get(`/user/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+        const response = await api.get(`/user/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-      const usuario = response.data.user;
-      setNome(usuario.nome);
-      setEmail(usuario.email);
-      setCpf(usuario.cpf);
-      setSenha("");
+        const usuario = response.data.user;
+        setNome(usuario.nome);
+        setEmail(usuario.email);
+        setCpf(usuario.cpf);
 
-      // Foto: tenta pegar do backend, se não tiver, pega do SecureStore
-      if (usuario.fotoPerfil) {
-        setFotoPerfil(usuario.fotoPerfil);
-        await SecureStore.setItemAsync("fotoPerfil", usuario.fotoPerfil);
-      } else {
-        const localFoto = await SecureStore.getItemAsync("fotoPerfil");
-        if (localFoto) setFotoPerfil(localFoto);
+        if (usuario.fotoPerfil) {
+          setFotoPerfil(usuario.fotoPerfil);
+          await SecureStore.setItemAsync("fotoPerfil", usuario.fotoPerfil);
+        } else {
+          const localFoto = await SecureStore.getItemAsync("fotoPerfil");
+          if (localFoto) setFotoPerfil(localFoto);
+        }
+
+        if (usuario.evento) setEvento(usuario.evento);
+      } catch (error) {
+        console.log(error.response?.data || error);
+        Alert.alert("Erro", "Não foi possível carregar os dados do usuário.");
       }
+    };
 
-      if (usuario.evento) setEvento(usuario.evento);
+    carregarUsuario();
+  }, []);
 
+  const atualizarFoto = async (uri) => {
+    try {
+      setFotoPerfil(uri);
+      await SecureStore.setItemAsync("fotoPerfil", uri);
+
+      const userId = await SecureStore.getItemAsync("userId");
+
+      const formData = new FormData();
+      formData.append("imagem", {
+        uri,
+        name: "foto.jpg",
+        type: "image/jpeg",
+      });
+      formData.append("id", userId);
+
+      await api.updateUserWithImage(formData);
+      Alert.alert("Sucesso", "Foto de perfil atualizada!");
     } catch (error) {
       console.log(error.response?.data || error);
-      Alert.alert("Erro", "Não foi possível carregar os dados do usuário.");
+      Alert.alert("Erro", "Não foi possível atualizar a foto.");
     }
   };
 
-  carregarUsuario();
-}, []);
-
-  // --- Função para atualizar foto no backend ---
-  const atualizarFoto = async (uri) => {
-  try {
-    setFotoPerfil(uri); // atualiza estado local
-
-    // salva localmente
-    await SecureStore.setItemAsync("fotoPerfil", uri);
-
-    // envia pro backend
-    const userId = await SecureStore.getItemAsync("userId");
-    const token = await SecureStore.getItemAsync("token");
-
-    const formData = new FormData();
-    formData.append("imagem", {
-      uri,
-      name: "foto.jpg",
-      type: "image/jpeg",
-    });
-    formData.append("id", userId);
-
-    await api.updateUserWithImage(formData);
-
-    Alert.alert("Sucesso", "Foto de perfil atualizada!");
-  } catch (error) {
-    console.log(error.response?.data || error);
-    Alert.alert("Erro", "Não foi possível atualizar a foto.");
-  }
-};
-
-  // --- Funções de foto ---
   async function escolherFoto() {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -100,8 +91,7 @@ export default function Perfil({ navigation }) {
     });
     if (!result.canceled) {
       const uri = result.assets[0].uri;
-      setFotoPerfil(uri);
-      await atualizarFoto(uri); // envia para backend
+      await atualizarFoto(uri);
     }
   }
 
@@ -113,8 +103,7 @@ export default function Perfil({ navigation }) {
     });
     if (!result.canceled) {
       const uri = result.assets[0].uri;
-      setFotoPerfil(uri);
-      await atualizarFoto(uri); // envia para backend
+      await atualizarFoto(uri);
     }
   }
 
@@ -126,7 +115,6 @@ export default function Perfil({ navigation }) {
     ]);
   }
 
-  // --- Atualizar perfil ---
   const atualizarPerfil = async () => {
     try {
       const id = await SecureStore.getItemAsync("userId");
@@ -142,19 +130,17 @@ export default function Perfil({ navigation }) {
 
       const response = await api.updateUser(usuarioAtualizado);
 
-      // --- Atualiza token e sincroniza estado ---
       if (response.data.token) {
         await SecureStore.setItemAsync("token", response.data.token);
       }
 
-      // --- Atualiza email e nome no estado local ---
       if (response.data.user) {
         setNome(response.data.user.nome || nome);
         setEmail(response.data.user.email || email);
       }
 
       Alert.alert("Sucesso", response.data.message || "Perfil atualizado!");
-      setSenha(""); // limpa campo de senha
+      setSenha("");
     } catch (error) {
       console.log(error.response?.data || error);
       Alert.alert(
@@ -164,7 +150,6 @@ export default function Perfil({ navigation }) {
     }
   };
 
-  // --- Excluir conta ---
   const excluirConta = async () => {
     Alert.alert("Confirmação", "Tem certeza que deseja excluir sua conta?", [
       { text: "Cancelar", style: "cancel" },
@@ -199,7 +184,7 @@ export default function Perfil({ navigation }) {
         style={styles.header}
       >
         <AntDesign
-          name="arrowleft"
+          name="left"
           size={24}
           color="#fff"
           onPress={() => navigation.navigate("Home")}
@@ -207,7 +192,6 @@ export default function Perfil({ navigation }) {
         <Feather name="settings" size={24} color="#fff" />
       </LinearGradient>
 
-      {/* Foto de perfil */}
       <TouchableOpacity onPress={escolherOpcaoFoto}>
         <Image
           source={
@@ -219,12 +203,11 @@ export default function Perfil({ navigation }) {
         />
       </TouchableOpacity>
 
-      {/* Imagem do evento */}
       {evento?.id_evento && (
         <View style={{ alignItems: "center", marginTop: 20 }}>
           <Image
             source={{
-              uri: `http://localhost:3000/api/v1/evento/imagem/${evento.id_evento}`,
+              uri: `http://192.168.0.100:3000/api/v1/evento/imagem/${evento.id_evento}`,
             }}
             style={{
               width: 80,
@@ -233,13 +216,10 @@ export default function Perfil({ navigation }) {
               resizeMode: "cover",
             }}
           />
-          <Text style={{ marginTop: 5, fontSize: 14 }}>
-            Imagem do evento
-          </Text>
+          <Text style={{ marginTop: 5, fontSize: 14 }}>Imagem do evento</Text>
         </View>
       )}
 
-      {/* Formulário */}
       <View style={styles.form}>
         <TextInput
           style={styles.input}
@@ -249,19 +229,12 @@ export default function Perfil({ navigation }) {
         />
         <TextInput
           style={styles.input}
-          value={senha}
-          onChangeText={setSenha}
-          placeholder="Nova senha"
-          secureTextEntry
-        />
-        <TextInput
-          style={styles.input}
           value={email}
           onChangeText={setEmail}
           placeholder="Email"
           keyboardType="email-address"
+          autoCapitalize="none"
         />
-
         <TextInput
           style={styles.input}
           value={cpf}
@@ -271,11 +244,10 @@ export default function Perfil({ navigation }) {
         />
       </View>
 
-      {/* Botões */}
       <View style={styles.botoesBox}>
         <TouchableOpacity style={styles.botao} onPress={atualizarPerfil}>
-          <Text style={styles.textoBotao}>Editar perfil</Text>
-          <Feather name="edit-3" size={18} color="#fff" />
+          <Text style={styles.textoBotao}>Salvar alterações</Text>
+          <Feather name="check" size={18} color="#fff" />
         </TouchableOpacity>
 
         <TouchableOpacity

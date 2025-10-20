@@ -11,6 +11,7 @@ import * as SecureStore from "expo-secure-store";
 import { Ionicons } from "@expo/vector-icons";
 import api from "../axios/axios";
 import Logo from "../component/logo";
+import CodigoModal from "../component/CodigoModal"; // Usando apenas esse
 
 export default function Login({ navigation }) {
   const [usuario, setUsuario] = useState({
@@ -18,6 +19,7 @@ export default function Login({ navigation }) {
     senha: "",
     showPassword: false,
   });
+  const [modalVisible, setModalVisible] = useState(false);
 
   async function handleLogin() {
     try {
@@ -25,27 +27,25 @@ export default function Login({ navigation }) {
         email: usuario.email,
         senha: usuario.senha,
       });
-  
-      // Verifica se o backend retornou token e usuário
+
       if (response.data.token && response.data.user) {
         await SecureStore.setItemAsync("token", response.data.token);
         await SecureStore.setItemAsync(
           "userId",
-          String(response.data.user.id_usuario) // salva o ID do usuário logado
+          String(response.data.user.id_usuario)
         );
       } else {
         Alert.alert("Erro", "Falha ao receber token do servidor.");
         return;
       }
-      
-  
+
       Alert.alert("Sucesso", response.data.message);
       navigation.navigate("Home");
     } catch (error) {
       console.log("Erro login:", JSON.stringify(error, null, 2));
       Alert.alert("Erro", error.response?.data?.error || "Falha ao conectar.");
     }
-  }  
+  }
 
   return (
     <View style={styles.container}>
@@ -72,12 +72,12 @@ export default function Login({ navigation }) {
           style={styles.passwordInput}
           placeholder="Senha:"
           placeholderTextColor="#000"
-          secureTextEntry={!usuario.showPassword} 
+          secureTextEntry={!usuario.showPassword}
           value={usuario.senha}
           onChangeText={(value) => setUsuario({ ...usuario, senha: value })}
         />
         <TouchableOpacity
-          style={styles.eyeIcon} 
+          style={styles.eyeIcon}
           onPress={() =>
             setUsuario({ ...usuario, showPassword: !usuario.showPassword })
           }
@@ -90,6 +90,7 @@ export default function Login({ navigation }) {
         </TouchableOpacity>
       </View>
 
+      {/* Links de cadastro e esqueci senha */}
       <View style={styles.linkContainer}>
         <Text style={styles.linkText}>Não possui login? </Text>
         <TouchableOpacity onPress={() => navigation.navigate("Cadastro")}>
@@ -97,9 +98,27 @@ export default function Login({ navigation }) {
         </TouchableOpacity>
       </View>
 
+      <TouchableOpacity
+        onPress={() => setModalVisible(true)}
+        style={{ marginTop: 5 }}
+      >
+        <Text style={[styles.linkHighlight, { fontSize: 14 }]}>
+          Esqueci minha senha
+        </Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Logar</Text>
       </TouchableOpacity>
+
+      {/* Modal de redefinição de senha */}
+      <CodigoModal
+        visible={modalVisible}
+        email={usuario.email}
+        onClose={() => setModalVisible(false)}
+        tipo="redefinir"
+        onSuccess={() => Alert.alert("Sucesso", "Senha redefinida com sucesso!")}
+      />
     </View>
   );
 }
@@ -156,12 +175,12 @@ const styles = StyleSheet.create({
   linkText: { color: "#000", fontSize: 14 },
   linkHighlight: { color: "#D98282", fontSize: 14 },
   eyeIcon: {
-    padding: 5, 
+    padding: 5,
   },
   passwordContainer: {
     flexDirection: "row",
     alignItems: "center",
-    width: "84%", 
+    width: "84%",
     backgroundColor: "#B0B8D4",
     borderRadius: 10,
     paddingHorizontal: 10,
@@ -174,4 +193,3 @@ const styles = StyleSheet.create({
     color: "#000",
   },
 });
-

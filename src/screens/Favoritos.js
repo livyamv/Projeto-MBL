@@ -36,7 +36,7 @@ export default function Favoritos({ navigation }) {
       return;
     }
 
-    // Passa o id_usuario como query ou corpo, dependendo do backend
+   
     const response = await api.getFavoritos({ id_usuario: userId });
     
     setFavoritos(response.data || []);

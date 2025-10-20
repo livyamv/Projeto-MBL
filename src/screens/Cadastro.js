@@ -11,9 +11,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import api from "../axios/axios";
 import Logo from "../component/logo";
+import CodigoModal from "../component/CodigoModal";
 
 export default function Cadastro() {
   const navigation = useNavigation();
+
   const [usuario, setUsuario] = useState({
     cpf: "",
     email: "",
@@ -24,8 +26,9 @@ export default function Cadastro() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showModalCodigo, setShowModalCodigo] = useState(false);
 
-  // Função para realizar o cadastro
+  // Solicitar código e abrir modal
   async function handleCadastro() {
     if (usuario.senha !== usuario.confirmarSenha) {
       Alert.alert("Erro", "As senhas não coincidem!");
@@ -33,16 +36,15 @@ export default function Cadastro() {
     }
 
     try {
-      const response = await api.postCadastro({
-        cpf: usuario.cpf,
+      await api.post("/user", {
+        nome: usuario.nome,
         email: usuario.email,
         senha: usuario.senha,
         confirmarSenha: usuario.confirmarSenha,
-        nome: usuario.nome,
+        cpf: usuario.cpf,
       });
 
-      Alert.alert("Sucesso", response.data.message);
-      navigation.navigate("Login"); // Navega para a tela de login
+      setShowModalCodigo(true); // abre modal
     } catch (error) {
       const errorMessage = error.response?.data?.error || "Erro desconhecido";
       Alert.alert("Erro", errorMessage);
@@ -52,18 +54,14 @@ export default function Cadastro() {
 
   return (
     <View style={styles.container}>
-      <View>
-        <Logo />
-      </View>
+      <Logo />
 
       <Text style={styles.subtitle}>
         Grandes Lugares Inspiram Momentos Perfeitos.
       </Text>
 
-      {/* Título */}
       <Text style={styles.title}>Faça seu cadastro!</Text>
 
-      {/* Campos */}
       <TextInput
         style={styles.input}
         placeholder="Nome:"
@@ -85,8 +83,7 @@ export default function Cadastro() {
         value={usuario.email}
         onChangeText={(value) => setUsuario({ ...usuario, email: value })}
       />
-      
-      {/* Campo Senha */}
+
       <View style={styles.passwordContainer}>
         <TextInput
           style={styles.passwordInput}
@@ -105,7 +102,6 @@ export default function Cadastro() {
         </TouchableOpacity>
       </View>
 
-      {/* Campo Confirmar Senha */}
       <View style={styles.passwordContainer}>
         <TextInput
           style={styles.passwordInput}
@@ -128,7 +124,6 @@ export default function Cadastro() {
         </TouchableOpacity>
       </View>
 
-      {/* Link para Login */}
       <View style={styles.loginRow}>
         <Text style={styles.loginText}>Já possui uma conta?</Text>
         <TouchableOpacity onPress={() => navigation.navigate("Login")}>
@@ -136,10 +131,17 @@ export default function Cadastro() {
         </TouchableOpacity>
       </View>
 
-      {/* Botão de cadastro */}
       <TouchableOpacity style={styles.button} onPress={handleCadastro}>
         <Text style={styles.buttonText}>Cadastrar</Text>
       </TouchableOpacity>
+
+      {/* Modal para inserir código */}
+      <CodigoModal
+        visible={showModalCodigo}
+        email={usuario.email}
+        onClose={() => setShowModalCodigo(false)}
+        onSuccess={() => navigation.navigate("Login")}
+      />
     </View>
   );
 }
