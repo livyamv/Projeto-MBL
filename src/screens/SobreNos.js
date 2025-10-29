@@ -43,13 +43,19 @@ export default function SobreNos() {
   }
 
   const integrantes = [
-    { nome: "Lívia", insta: "https://www.instagram.com/livreys/" },
-    { nome: "Maria Luísa", insta: "https://www.instagram.com/m.lureys/" },
-    { nome: "Maria Clara", insta: null },
-    { nome: "Priscila", insta: "https://www.instagram.com/prieloize/" },
     { nome: "Gabriel", insta: "https://www.instagram.com/gabb_ignacio/" },
-    { nome: "Guilherme", insta: "https://www.instagram.com/guilherme_guimaraes11/" },
+    {
+      nome: "Guilherme",
+      insta: "https://www.instagram.com/guilherme_guimaraes11/",
+    },
     { nome: "Leonardo", insta: "https://www.instagram.com/leo.pedrosoo/" },
+    { nome: "Lívia", insta: "https://www.instagram.com/livreys/" },
+    {
+      nome: "Maria Clara",
+      insta: "https://www.instagram.com/mahh.oliveira07/",
+    },
+    { nome: "Maria Luísa", insta: "https://www.instagram.com/m.lureys/" },
+    { nome: "Priscila", insta: "https://www.instagram.com/prieloize/" },
   ];
 
   return (

@@ -1,3 +1,4 @@
+// Login.js
 import React, { useState } from "react";
 import {
   View,
@@ -5,13 +6,13 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
 } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import { Ionicons } from "@expo/vector-icons";
 import api from "../axios/axios";
 import Logo from "../component/logo";
-import CodigoModal from "../component/CodigoModal"; // Usando apenas esse
+import CodigoModal from "../component/CodigoModal";
+import Snackbar from "../component/Snackbar"; // snackbar arredondado
 
 export default function Login({ navigation }) {
   const [usuario, setUsuario] = useState({
@@ -20,6 +21,14 @@ export default function Login({ navigation }) {
     showPassword: false,
   });
   const [modalVisible, setModalVisible] = useState(false);
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+
+  const mostrarSnackbar = (mensagem, tempo = 3000) => {
+    setSnackbarMessage(mensagem);
+    setSnackbarVisible(true);
+    setTimeout(() => setSnackbarVisible(false), tempo);
+  };
 
   async function handleLogin() {
     try {
@@ -35,15 +44,15 @@ export default function Login({ navigation }) {
           String(response.data.user.id_usuario)
         );
       } else {
-        Alert.alert("Erro", "Falha ao receber token do servidor.");
+        mostrarSnackbar("Falha ao receber token do servidor.");
         return;
       }
 
-      Alert.alert("Sucesso", response.data.message);
+      mostrarSnackbar(response.data.message);
       navigation.navigate("Home");
     } catch (error) {
       console.log("Erro login:", JSON.stringify(error, null, 2));
-      Alert.alert("Erro", error.response?.data?.error || "Falha ao conectar.");
+      mostrarSnackbar(error.response?.data?.error || "Falha ao conectar.");
     }
   }
 
@@ -90,7 +99,6 @@ export default function Login({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      {/* Links de cadastro e esqueci senha */}
       <View style={styles.linkContainer}>
         <Text style={styles.linkText}>Não possui login? </Text>
         <TouchableOpacity onPress={() => navigation.navigate("Cadastro")}>
@@ -111,13 +119,20 @@ export default function Login({ navigation }) {
         <Text style={styles.buttonText}>Logar</Text>
       </TouchableOpacity>
 
-      {/* Modal de redefinição de senha */}
       <CodigoModal
         visible={modalVisible}
         email={usuario.email}
         onClose={() => setModalVisible(false)}
         tipo="redefinir"
-        onSuccess={() => Alert.alert("Sucesso", "Senha redefinida com sucesso!")}
+        onSuccess={() =>
+          mostrarSnackbar("Senha redefinida com sucesso!", 3000)
+        }
+      />
+
+      {/* Snackbar arredondado */}
+      <Snackbar
+        visible={snackbarVisible}
+        message={snackbarMessage}
       />
     </View>
   );
@@ -174,9 +189,7 @@ const styles = StyleSheet.create({
   linkContainer: { flexDirection: "row", marginTop: 10 },
   linkText: { color: "#000", fontSize: 14 },
   linkHighlight: { color: "#D98282", fontSize: 14 },
-  eyeIcon: {
-    padding: 5,
-  },
+  eyeIcon: { padding: 5 },
   passwordContainer: {
     flexDirection: "row",
     alignItems: "center",

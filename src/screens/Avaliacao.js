@@ -6,23 +6,29 @@ import {
   ScrollView,
   FlatList,
   ActivityIndicator,
-  Alert,
   Pressable,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import Sidebar from "../component/Sidebar";
-import Logo from "../component/logo"; // <-- componente de logo usado aqui
+import Logo from "../component/logo";
 import api from "../axios/axios";
+import Snackbar from "../component/Snackbar";
 
 export default function MinhasAvaliacoes({ navigation }) {
   const [avaliacoes, setAvaliacoes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [avaliacaoSelecionada, setAvaliacaoSelecionada] = useState(null);
+  const [confirmMode, setConfirmMode] = useState(false); // controla se o snackbar é de confirmação ou mensagem simples
 
   const fetchAvaliacoes = async () => {
     try {
       const response = await api.getAvaliacoesUsuario();
       setAvaliacoes(response.data.avaliacoes || []);
+    } catch (err) {
+      console.error("Erro ao buscar avaliações:", err);
     } finally {
       setLoading(false);
     }
@@ -61,31 +67,41 @@ export default function MinhasAvaliacoes({ navigation }) {
   };
 
   const handleDelete = (id_avaliacao) => {
-    Alert.alert(
-      "Excluir Avaliação",
-      "Tem certeza que deseja excluir esta avaliação?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Excluir",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await api.deleteAvaliacao(id_avaliacao);
-              setAvaliacoes((prev) =>
-                prev.filter((a) => a.id_avaliacao !== id_avaliacao)
-              );
-            } catch (error) {
-              console.error(
-                "Erro ao excluir avaliação:",
-                error.response?.data || error.message
-              );
-              Alert.alert("Erro", "Não foi possível excluir a avaliação.");
-            }
-          },
-        },
-      ]
-    );
+    setAvaliacaoSelecionada(id_avaliacao);
+    setSnackbarMessage("Tem certeza que deseja excluir esta avaliação?");
+    setConfirmMode(true);
+    setSnackbarVisible(true);
+  };
+
+  // Função para exibir snackbar de forma automática
+  const mostrarSnackbar = (mensagem, tempo = 500) => {
+    setSnackbarMessage(mensagem);
+    setConfirmMode(false); // mensagem simples
+    setSnackbarVisible(true);
+
+    setTimeout(() => {
+      setSnackbarVisible(false);
+    }, tempo);
+  };
+
+  // Função para confirmar exclusão da avaliação
+  const confirmarExclusao = async () => {
+    try {
+      await api.deleteAvaliacao(avaliacaoSelecionada);
+      // Remove a avaliação da lista
+      setAvaliacoes((prev) =>
+        prev.filter((a) => a.id_avaliacao !== avaliacaoSelecionada)
+      );
+      mostrarSnackbar("Avaliação excluída com sucesso!"); // exibe mensagem de sucesso
+    } catch (error) {
+      console.error(
+        "Erro ao excluir avaliação:",
+        error.response?.data || error.message
+      );
+      mostrarSnackbar("Erro ao excluir avaliação. Tente novamente."); // exibe mensagem de erro
+    } finally {
+      setAvaliacaoSelecionada(null);
+    }
   };
 
   const renderReview = ({ item }) => (
@@ -94,10 +110,8 @@ export default function MinhasAvaliacoes({ navigation }) {
         {item.nome_estabelecimento || "Sem nome"}
       </Text>
 
-      {/* ⭐ Nota */}
       {renderStars(item.nota || 0)}
 
-      {/* 💬 Comentário */}
       <Text style={styles.commentText}>
         {item.comentario || "Sem comentário."}
       </Text>
@@ -113,7 +127,7 @@ export default function MinhasAvaliacoes({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* Sidebar (overlay quando aberta) */}
+      {/* Sidebar */}
       {isSidebarOpen && (
         <View style={styles.sidebarOverlay}>
           <Sidebar
@@ -128,11 +142,12 @@ export default function MinhasAvaliacoes({ navigation }) {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <View style={styles.topBar}>
-            <Pressable onPress={() => setIsSidebarOpen(true)} style={styles.menuButton}>
+            <Pressable
+              onPress={() => setIsSidebarOpen(true)}
+              style={styles.menuButton}
+            >
               <Icon name="bars" size={20} color="#000" />
             </Pressable>
-
-            {/* Usa o componente Logo (ícone + texto) */}
             <View style={styles.logoWrapper}>
               <Logo />
             </View>
@@ -164,6 +179,18 @@ export default function MinhasAvaliacoes({ navigation }) {
           />
         )}
       </ScrollView>
+
+      {/* Snackbar para confirmar/exibir mensagens */}
+      <Snackbar
+        visible={snackbarVisible}
+        message={snackbarMessage}
+        onConfirm={confirmMode ? confirmarExclusao : null}
+        onCancel={() => {
+          setSnackbarVisible(false);
+          setConfirmMode(false);
+          setAvaliacaoSelecionada(null);
+        }}
+      />
     </View>
   );
 }
@@ -199,7 +226,6 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   logoWrapper: {
-    // garante que o logo fique bem alinhado e não ocupe todo o espaço
     marginLeft: 2,
   },
   subtitle: {

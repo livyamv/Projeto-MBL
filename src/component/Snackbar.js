@@ -12,19 +12,10 @@ export default function Snackbar({ visible, message, onConfirm, onCancel }) {
     if (visible) {
       setShow(true);
       Animated.parallel([
-        Animated.timing(opacity, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scale, {
-          toValue: 1,
-          friction: 6,
-          useNativeDriver: true,
-        }),
+        Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+        Animated.spring(scale, { toValue: 1, friction: 6, useNativeDriver: true }),
       ]).start();
 
-      // Se for snackbar de mensagem simples, fecha automaticamente
       if (!onConfirm && !onCancel) {
         setTimeout(() => {
           Animated.parallel([
@@ -35,16 +26,8 @@ export default function Snackbar({ visible, message, onConfirm, onCancel }) {
       }
     } else {
       Animated.parallel([
-        Animated.timing(opacity, {
-          toValue: 0,
-          duration: 150,
-          useNativeDriver: true,
-        }),
-        Animated.timing(scale, {
-          toValue: 0.8,
-          duration: 150,
-          useNativeDriver: true,
-        }),
+        Animated.timing(opacity, { toValue: 0, duration: 150, useNativeDriver: true }),
+        Animated.timing(scale, { toValue: 0.8, duration: 150, useNativeDriver: true }),
       ]).start(() => setShow(false));
     }
   }, [visible]);
@@ -54,7 +37,7 @@ export default function Snackbar({ visible, message, onConfirm, onCancel }) {
   return (
     <Portal>
       <Pressable
-        style={onConfirm && onCancel ? styles.portalOverlay : styles.portalOverlayCenter}
+        style={styles.portalOverlay} // sempre fundo escuro
         onPress={onConfirm && onCancel ? onCancel : null}
       >
         <Animated.View
@@ -64,7 +47,12 @@ export default function Snackbar({ visible, message, onConfirm, onCancel }) {
             {
               opacity,
               transform: [{ scale }],
-              backgroundColor: onConfirm && onCancel ? "#b84d4dff" : "#ccc", // cinza se mensagem simples
+              // Se houver botões, mantém estilo padrão, senão caixa grande branca
+              backgroundColor: "#fff",
+              padding: onConfirm && onCancel ? 20 : 30,
+              borderRadius: onConfirm && onCancel ? 12 : 15,
+              width: onConfirm && onCancel ? "85%" : "90%",
+              maxWidth: 450,
             },
           ]}
         >
@@ -77,7 +65,7 @@ export default function Snackbar({ visible, message, onConfirm, onCancel }) {
                 <Text style={styles.cancelButtonText}>Cancelar</Text>
               </Pressable>
               <Pressable onPress={onConfirm} style={styles.confirmButton}>
-                <Text style={styles.confirmButtonText}>Excluir</Text>
+                <Text style={styles.confirmButtonText}>Confirmar</Text>
               </Pressable>
             </View>
           )}
@@ -90,22 +78,12 @@ export default function Snackbar({ visible, message, onConfirm, onCancel }) {
 const styles = StyleSheet.create({
   portalOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 9999,
-  },
-  portalOverlayCenter: {
-    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.6)", // fundo escuro
     justifyContent: "center",
     alignItems: "center",
     zIndex: 9999,
   },
   snackbarContent: {
-    borderRadius: 12,
-    padding: 25,
-    width: "85%",
-    maxWidth: 400,
     elevation: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
@@ -117,20 +95,20 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     color: "#333",
-    marginBottom: 5,
+    marginBottom: 10,
   },
   snackbarMessage: {
     color: "#555",
-    fontSize: 15,
+    fontSize: 16,
     textAlign: "center",
-    lineHeight: 22,
+    lineHeight: 24,
   },
   snackbarActionsWithMargin: {
     flexDirection: "row",
     justifyContent: "space-between",
     width: "100%",
     gap: 15,
-    marginTop: 20, // distância entre mensagem e botões
+    marginTop: 25,
   },
   cancelButton: {
     flex: 1,
