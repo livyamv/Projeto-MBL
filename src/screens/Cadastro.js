@@ -64,21 +64,21 @@ export default function Cadastro() {
 
       <TextInput
         style={styles.input}
-        placeholder="Nome:"
+        placeholder="Nome"
         placeholderTextColor="#000"
         value={usuario.nome}
         onChangeText={(value) => setUsuario({ ...usuario, nome: value })}
       />
       <TextInput
         style={styles.input}
-        placeholder="CPF:"
+        placeholder="CPF"
         placeholderTextColor="#000"
         value={usuario.cpf}
         onChangeText={(value) => setUsuario({ ...usuario, cpf: value })}
       />
       <TextInput
         style={styles.input}
-        placeholder="Email:"
+        placeholder="Email"
         placeholderTextColor="#000"
         value={usuario.email}
         onChangeText={(value) => setUsuario({ ...usuario, email: value })}
@@ -87,7 +87,7 @@ export default function Cadastro() {
       <View style={styles.passwordContainer}>
         <TextInput
           style={styles.passwordInput}
-          placeholder="Senha:"
+          placeholder="Senha"
           placeholderTextColor="#000"
           secureTextEntry={!showPassword}
           value={usuario.senha}
@@ -105,7 +105,7 @@ export default function Cadastro() {
       <View style={styles.passwordContainer}>
         <TextInput
           style={styles.passwordInput}
-          placeholder="Confirmar Senha:"
+          placeholder="Confirmar Senha"
           placeholderTextColor="#000"
           secureTextEntry={!showConfirmPassword}
           value={usuario.confirmarSenha}

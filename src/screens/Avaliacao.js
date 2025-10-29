@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import Sidebar from "../component/Sidebar";
+import Logo from "../component/logo"; // <-- componente de logo usado aqui
 import api from "../axios/axios";
 
 export default function MinhasAvaliacoes({ navigation }) {
@@ -39,7 +40,9 @@ export default function MinhasAvaliacoes({ navigation }) {
     const emptyStars = 5 - totalStars;
 
     for (let i = 0; i < fullStars; i++) {
-      stars.push(<Icon key={`full-${i}`} name="star" size={20} color="#FFD700" />);
+      stars.push(
+        <Icon key={`full-${i}`} name="star" size={20} color="#FFD700" />
+      );
     }
 
     if (hasHalfStar) {
@@ -49,7 +52,9 @@ export default function MinhasAvaliacoes({ navigation }) {
     }
 
     for (let i = 0; i < emptyStars; i++) {
-      stars.push(<Icon key={`empty-${i}`} name="star-o" size={20} color="#FFD700" />);
+      stars.push(
+        <Icon key={`empty-${i}`} name="star-o" size={20} color="#FFD700" />
+      );
     }
 
     return <View style={styles.stars}>{stars}</View>;
@@ -108,7 +113,7 @@ export default function MinhasAvaliacoes({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* 🔹 Sidebar fixa */}
+      {/* Sidebar (overlay quando aberta) */}
       {isSidebarOpen && (
         <View style={styles.sidebarOverlay}>
           <Sidebar
@@ -120,15 +125,19 @@ export default function MinhasAvaliacoes({ navigation }) {
         </View>
       )}
 
-      {/* 🔹 Conteúdo principal com scroll */}
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <View style={styles.topBar}>
-            <Pressable onPress={() => setIsSidebarOpen(true)}>
-              <Icon name="bars" size={22} color="#000" />
+            <Pressable onPress={() => setIsSidebarOpen(true)} style={styles.menuButton}>
+              <Icon name="bars" size={20} color="#000" />
             </Pressable>
-            <Text style={styles.logo}>Glimp</Text>
+
+            {/* Usa o componente Logo (ícone + texto) */}
+            <View style={styles.logoWrapper}>
+              <Logo />
+            </View>
           </View>
+
           <Text style={styles.subtitle}>
             Grandes Lugares Inspiram Momentos Perfeitos.
           </Text>
@@ -137,7 +146,11 @@ export default function MinhasAvaliacoes({ navigation }) {
         <Text style={styles.sectionTitle}>Minhas Avaliações</Text>
 
         {loading ? (
-          <ActivityIndicator size="large" color="#5a6fa1" style={{ marginTop: 30 }} />
+          <ActivityIndicator
+            size="large"
+            color="#5a6fa1"
+            style={{ marginTop: 30 }}
+          />
         ) : avaliacoes.length === 0 ? (
           <Text style={styles.emptyText}>
             Você ainda não fez nenhuma avaliação.
@@ -180,12 +193,14 @@ const styles = StyleSheet.create({
   topBar: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
   },
-  logo: {
-    fontSize: 30,
-    fontWeight: "700",
-    color: "#000",
+  menuButton: {
+    padding: 6,
+    marginRight: 8,
+  },
+  logoWrapper: {
+    // garante que o logo fique bem alinhado e não ocupe todo o espaço
+    marginLeft: 2,
   },
   subtitle: {
     fontSize: 12,
@@ -193,7 +208,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 25,
     fontWeight: "bold",
     color: "#333",
     marginBottom: 15,

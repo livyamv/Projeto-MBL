@@ -1,20 +1,24 @@
-// PERFIL.JS - Corrigido e limpo
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   TextInput,
   TouchableOpacity,
   Text,
   Image,
-  Alert,
   StyleSheet,
+  Pressable,
+  Animated,
+  Dimensions,
+  Alert,
 } from "react-native";
 import { AntDesign, Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
 import * as SecureStore from "expo-secure-store";
+import { Portal } from "react-native-paper";
 import api from "../axios/axios";
+
+const { width } = Dimensions.get("window");
 
 export default function Perfil({ navigation }) {
   const [nome, setNome] = useState("");
@@ -24,12 +28,18 @@ export default function Perfil({ navigation }) {
   const [fotoPerfil, setFotoPerfil] = useState(null);
   const [evento, setEvento] = useState(null);
 
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [excluirConfirm, setExcluirConfirm] = useState(false);
+
+  const opacity = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(0.8)).current;
+
   useEffect(() => {
     const carregarUsuario = async () => {
       try {
         const userId = await SecureStore.getItemAsync("userId");
         const token = await SecureStore.getItemAsync("token");
-
         if (!userId || !token) return;
 
         const response = await api.get(`/user/${userId}`, {
@@ -52,10 +62,9 @@ export default function Perfil({ navigation }) {
         if (usuario.evento) setEvento(usuario.evento);
       } catch (error) {
         console.log(error.response?.data || error);
-        Alert.alert("Erro", "Não foi possível carregar os dados do usuário.");
+        showSnackbar("Não foi possível carregar os dados do usuário.");
       }
     };
-
     carregarUsuario();
   }, []);
 
@@ -75,10 +84,10 @@ export default function Perfil({ navigation }) {
       formData.append("id", userId);
 
       await api.updateUserWithImage(formData);
-      Alert.alert("Sucesso", "Foto de perfil atualizada!");
+      showSnackbar("Foto de perfil atualizada!");
     } catch (error) {
       console.log(error.response?.data || error);
-      Alert.alert("Erro", "Não foi possível atualizar a foto.");
+      showSnackbar("Não foi possível atualizar a foto.");
     }
   };
 
@@ -118,10 +127,8 @@ export default function Perfil({ navigation }) {
   const atualizarPerfil = async () => {
     try {
       const id = await SecureStore.getItemAsync("userId");
-      const token = await SecureStore.getItemAsync("token");
-
-      if (!id || !token) {
-        Alert.alert("Erro", "Usuário não autenticado. Faça login novamente.");
+      if (!id) {
+        showSnackbar("Usuário não autenticado. Faça login novamente.");
         return;
       }
 
@@ -139,46 +146,76 @@ export default function Perfil({ navigation }) {
         setEmail(response.data.user.email || email);
       }
 
-      Alert.alert("Sucesso", response.data.message || "Perfil atualizado!");
+      showSnackbar(response.data.message || "Perfil atualizado!");
       setSenha("");
     } catch (error) {
       console.log(error.response?.data || error);
-      Alert.alert(
-        "Erro",
+      showSnackbar(
         error.response?.data?.message || "Não foi possível atualizar o perfil."
       );
     }
   };
 
+  const handleLogout = async () => {
+    await SecureStore.deleteItemAsync("token");
+    await SecureStore.deleteItemAsync("userId");
+    navigation.reset({ index: 0, routes: [{ name: "Login" }] });
+  };
+
+  const confirmarExclusao = () => {
+    setExcluirConfirm(true);
+    showSnackbar("Tem certeza que deseja excluir sua conta?", true);
+  };
+
   const excluirConta = async () => {
-    Alert.alert("Confirmação", "Tem certeza que deseja excluir sua conta?", [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Excluir",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            const userId = await SecureStore.getItemAsync("userId");
-            const response = await api.deleteUser(userId);
-            Alert.alert("Sucesso", response.data.message || "Conta excluída!");
-            navigation.reset({ index: 0, routes: [{ name: "Login" }] });
-          } catch (error) {
-            console.log(error.response?.data || error);
-            Alert.alert(
-              "Erro",
-              error.response?.data?.message ||
-                "Não foi possível excluir a conta."
-            );
-          }
-        },
-      },
-    ]);
+    try {
+      const userId = await SecureStore.getItemAsync("userId");
+      await api.deleteUser(userId);
+      showSnackbar("Conta excluída com sucesso!");
+      navigation.reset({ index: 0, routes: [{ name: "Login" }] });
+    } catch (error) {
+      console.log(error.response?.data || error);
+      showSnackbar(
+        error.response?.data?.message || "Não foi possível excluir a conta."
+      );
+    } finally {
+      setExcluirConfirm(false);
+      setSnackbarVisible(false);
+    }
+  };
+
+  const showSnackbar = (message, confirm = false) => {
+    setExcluirConfirm(confirm);
+    setSnackbarMessage(message);
+    setSnackbarVisible(true);
+
+    Animated.parallel([
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scale, {
+        toValue: 1,
+        friction: 6,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      if (!confirm) {
+        setTimeout(() => {
+          Animated.parallel([
+            Animated.timing(opacity, { toValue: 0, duration: 200, useNativeDriver: true }),
+            Animated.timing(scale, { toValue: 0.8, duration: 200, useNativeDriver: true }),
+          ]).start(() => setSnackbarVisible(false));
+        }, 2500);
+      }
+    });
   };
 
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={["#1f2a44", "#3A5BA0", "#6f87c7"]}
+        colors={["#5D6EAA", "#8F9AAC"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
@@ -189,7 +226,6 @@ export default function Perfil({ navigation }) {
           color="#fff"
           onPress={() => navigation.navigate("Home")}
         />
-        <Feather name="settings" size={24} color="#fff" />
       </LinearGradient>
 
       <TouchableOpacity onPress={escolherOpcaoFoto}>
@@ -209,12 +245,7 @@ export default function Perfil({ navigation }) {
             source={{
               uri: `http://192.168.0.100:3000/api/v1/evento/imagem/${evento.id_evento}`,
             }}
-            style={{
-              width: 80,
-              height: 80,
-              borderRadius: 10,
-              resizeMode: "cover",
-            }}
+            style={{ width: 80, height: 80, borderRadius: 10, resizeMode: "cover" }}
           />
           <Text style={{ marginTop: 5, fontSize: 14 }}>Imagem do evento</Text>
         </View>
@@ -244,47 +275,69 @@ export default function Perfil({ navigation }) {
         />
       </View>
 
-      <View style={styles.botoesBox}>
-        <TouchableOpacity style={styles.botao} onPress={atualizarPerfil}>
-          <Text style={styles.textoBotao}>Salvar alterações</Text>
-          <Feather name="check" size={18} color="#fff" />
-        </TouchableOpacity>
+      <TouchableOpacity style={styles.botao} onPress={atualizarPerfil}>
+        <Text style={styles.textoBotao}>Salvar alterações</Text>
+        <Feather name="check" size={18} color="#ffffffff" />
+      </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.botao}
-          onPress={() =>
-            navigation.reset({ index: 0, routes: [{ name: "Login" }] })
-          }
-        >
-          <Text style={styles.textoBotao}>Sair</Text>
-          <Feather name="log-out" size={20} color="#fff" />
-        </TouchableOpacity>
+      <TouchableOpacity style={styles.excluirButton} onPress={confirmarExclusao}>
+        <Text style={styles.excluirButtonText}>Excluir conta</Text>
+      </TouchableOpacity>
+
+      <View style={styles.footer}>
+        <Pressable style={styles.logoutButton} onPress={handleLogout}>
+          <AntDesign name="logout" size={28} color="gray" />
+        </Pressable>
       </View>
 
-      <TouchableOpacity style={styles.excluirConta} onPress={excluirConta}>
-        <Text style={styles.excluirTexto}>Excluir conta</Text>
-      </TouchableOpacity>
+      {/* Snackbar */}
+      {snackbarVisible && (
+        <Portal>
+          <Pressable
+            style={excluirConfirm ? styles.portalOverlay : styles.portalOverlayCenter}
+            onPress={excluirConfirm ? () => setSnackbarVisible(false) : null}
+          >
+            <Animated.View
+              onTouchStart={(e) => e.stopPropagation()}
+              style={[styles.snackbarContent, { opacity, transform: [{ scale }] }]}
+            >
+              <Text style={styles.snackbarMessage}>{snackbarMessage}</Text>
+
+              {excluirConfirm && (
+                <View style={styles.snackbarActionsWithMargin}>
+                  <Pressable style={styles.cancelButton} onPress={() => setSnackbarVisible(false)}>
+                    <Text style={styles.cancelButtonText}>Cancelar</Text>
+                  </Pressable>
+                  <Pressable style={styles.confirmButton} onPress={excluirConta}>
+                    <Text style={styles.confirmButtonText}>Excluir</Text>
+                  </Pressable>
+                </View>
+              )}
+            </Animated.View>
+          </Pressable>
+        </Portal>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#e5e5e5", alignItems: "center" },
+  container: { flex: 1, backgroundColor: "#D9D9D9", alignItems: "center" },
   header: {
     width: "100%",
-    height: 160,
+    height: 200,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
     paddingHorizontal: 20,
     paddingTop: 50,
-    borderBottomLeftRadius: 50,
-    borderBottomRightRadius: 50,
+    borderBottomLeftRadius: 40,
+    borderBottomRightRadius: 40,
   },
   fotoPerfil: {
-    width: 130,
-    height: 130,
-    borderRadius: 20,
+    width: 180,
+    height: 180,
+    borderRadius: 50,
     marginTop: -65,
     borderWidth: 3,
     borderColor: "#fff",
@@ -292,41 +345,99 @@ const styles = StyleSheet.create({
   form: { width: "85%", marginTop: 105 },
   input: {
     backgroundColor: "#fff",
-    padding: 19,
+    padding: 18,
     borderRadius: 12,
-    marginBottom: 35,
+    marginBottom: 30,
     borderWidth: 1,
+    borderColor: "#BFBFBF",
     fontSize: 16,
-    elevation: 2,
-    borderColor: "black",
-  },
-  botoesBox: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "85%",
-    marginTop: 25,
   },
   botao: {
     flexDirection: "row",
-    backgroundColor: "#5a6fa1",
-    paddingVertical: 12,
+    backgroundColor: "#5D6EAA",
+    paddingVertical: 14,
     paddingHorizontal: 22,
     borderRadius: 15,
     alignItems: "center",
     gap: 8,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 2, height: 2 },
-    shadowRadius: 5,
+    marginTop: 10,
   },
-  textoBotao: { color: "#fff", fontSize: 16, fontWeight: "600" },
-  excluirConta: {
-    marginTop: 25,
-    borderWidth: 2,
-    borderColor: "red",
-    borderRadius: 12,
+  textoBotao: { color: "#ffffffff", fontSize: 16, fontWeight: "600" },
+  excluirButton: {
+    backgroundColor: "#C9302C",
     paddingVertical: 12,
-    paddingHorizontal: 40,
+    paddingHorizontal: 30,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 25,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
   },
-  excluirTexto: { color: "red", fontSize: 16, fontWeight: "bold" },
+  excluirButtonText: { color: "#FFF", fontSize: 16, fontWeight: "600" },
+  footer: { position: "absolute", bottom: 35, right: 25 },
+  logoutButton: {
+    backgroundColor: "#fff",
+    padding: 12,
+    borderRadius: 50,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  portalOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 9999,
+  },
+  portalOverlayCenter: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 9999,
+  },
+  snackbarContent: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 25,
+    width: "85%",
+    maxWidth: 400,
+    elevation: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    alignItems: "center",
+  },
+  snackbarMessage: { color: "#555", fontSize: 15, textAlign: "center", lineHeight: 22 },
+  snackbarActionsWithMargin: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    gap: 15,
+    marginTop: 20,
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  cancelButtonText: { color: "#555", fontWeight: "bold", fontSize: 16 },
+  confirmButton: {
+    flex: 1,
+    backgroundColor: "#e74c3c",
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  confirmButtonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
 });

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import {
   View,
@@ -10,8 +9,9 @@ import {
   Linking,
   ScrollView,
 } from "react-native";
-import { AntDesign, Entypo, Feather, MaterialIcons } from "@expo/vector-icons";
+import { AntDesign, Entypo } from "@expo/vector-icons";
 import Logo from "../component/logo";
+import Sidebar from "../component/Sidebar";
 import { useNavigation } from "@react-navigation/native";
 
 const { width } = Dimensions.get("window");
@@ -42,15 +42,14 @@ export default function SobreNos() {
     }
   }
 
-  // Lista dos integrantes com seus @
   const integrantes = [
-    { nome: "Lívia", insta: "livia" },
-    { nome: "Maria Luísa", insta: "marialuisa" },
-    { nome: "Maria Clara", insta: "mariaclara" },
-    { nome: "Priscila", insta: "priscila" },
-    { nome: "Gabriel", insta: "gabriel" },
-    { nome: "Guilherme", insta: "guilherme" },
-    { nome: "Leonardo", insta: "leonardo" },
+    { nome: "Lívia", insta: "https://www.instagram.com/livreys/" },
+    { nome: "Maria Luísa", insta: "https://www.instagram.com/m.lureys/" },
+    { nome: "Maria Clara", insta: null },
+    { nome: "Priscila", insta: "https://www.instagram.com/prieloize/" },
+    { nome: "Gabriel", insta: "https://www.instagram.com/gabb_ignacio/" },
+    { nome: "Guilherme", insta: "https://www.instagram.com/guilherme_guimaraes11/" },
+    { nome: "Leonardo", insta: "https://www.instagram.com/leo.pedrosoo/" },
   ];
 
   return (
@@ -69,93 +68,57 @@ export default function SobreNos() {
         </View>
       </View>
 
-      {/* Conteúdo com Scroll */}
+      {/* Conteúdo */}
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Sessão Sobre Nós */}
+        {/* Sobre Nós */}
         <View style={styles.content}>
           <Text style={styles.title}>Sobre Nós</Text>
           <Text style={styles.text}>
             O GLIMP é um projeto criado para facilitar a descoberta de lugares
-            incríveis — de restaurantes a pontos de lazer e comércios locais.{"\n\n"}
+            incríveis — de restaurantes a pontos de lazer e comércios locais.
+            {"\n\n"}
             Nosso objetivo é inspirar momentos perfeitos e dar visibilidade aos
             estabelecimentos da sua cidade.
           </Text>
         </View>
 
-        {/* Integrantes */}
+        {/* Nosso Time */}
         <View style={styles.teamContainer}>
           <Text style={styles.subtitleTitle}>Nosso Time</Text>
 
           {integrantes.map((pessoa, index) => (
-            <View key={index} style={styles.memberCard}>
+            <Pressable
+              key={index}
+              style={({ pressed }) => [
+                styles.memberCard,
+                pressed && { transform: [{ scale: 0.97 }] },
+              ]}
+              onPress={() => pessoa.insta && Linking.openURL(pessoa.insta)}
+            >
+              {/* Avatar circular */}
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>{pessoa.nome[0]}</Text>
+              </View>
+
               <Text style={styles.memberName}>{pessoa.nome}</Text>
-              <Pressable
-                onPress={() =>
-                  Linking.openURL(``)
-                }
-              >
-                <AntDesign name="instagram" size={24} color="#E1306C" />
-              </Pressable>
-            </View>
+
+              {pessoa.insta ? (
+                <AntDesign name="instagram" size={28} color="#E1306C" />
+              ) : (
+                <Text style={styles.noInsta}>Não tem Instagram</Text>
+              )}
+            </Pressable>
           ))}
         </View>
       </ScrollView>
 
-      {/* Sidebar animada */}
-      {sidebarOpen && (
-        <>
-          <Pressable style={styles.overlay} onPress={toggleSidebar} />
-          <Animated.View style={[styles.sidebar, { left: slideAnim }]}>
-            <Pressable
-              style={styles.sidebarButton}
-              onPress={() => navigation.navigate("Perfil")}
-            >
-              <AntDesign name="user" size={22} color="#333" />
-              <Text style={styles.sidebarItem}>Perfil</Text>
-            </Pressable>
-
-            <Pressable
-              style={styles.sidebarButton}
-              onPress={() => navigation.navigate("Favoritos")}
-            >
-              <AntDesign name="hearto" size={22} color="#333" />
-              <Text style={styles.sidebarItem}>Favoritos</Text>
-            </Pressable>
-
-            <Pressable
-              style={styles.sidebarButton}
-              onPress={() => navigation.navigate("Avaliacoes")}
-            >
-              <MaterialIcons name="rate-review" size={22} color="#333" />
-              <Text style={styles.sidebarItem}>Avaliações</Text>
-            </Pressable>
-
-            <Pressable
-              style={styles.sidebarButton}
-              onPress={() => navigation.navigate("Configuracoes")}
-            >
-              <Feather name="settings" size={22} color="#333" />
-              <Text style={styles.sidebarItem}>Configurações</Text>
-            </Pressable>
-
-            <Pressable
-              style={styles.sidebarButton}
-              onPress={() => navigation.navigate("SobreNos")}
-            >
-              <Feather name="info" size={22} color="#333" />
-              <Text style={[styles.sidebarItem, styles.bold]}>Sobre Nós</Text>
-            </Pressable>
-
-            <Pressable
-              style={[styles.sidebarButton, { marginTop: "auto" }]}
-              onPress={handleLogout}
-            >
-              <AntDesign name="logout" size={22} color="black" />
-              <Text style={styles.sidebarItem}>Sair</Text>
-            </Pressable>
-          </Animated.View>
-        </>
-      )}
+      {/* Sidebar */}
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        navigation={navigation}
+        onLogout={handleLogout}
+      />
     </View>
   );
 }
@@ -163,7 +126,7 @@ export default function SobreNos() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#f0f4f8",
     padding: 20,
   },
 
@@ -190,21 +153,28 @@ const styles = StyleSheet.create({
 
   content: {
     marginTop: 10,
-    marginBottom: 20,
+    marginBottom: 30,
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 15,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
   },
 
   title: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: "bold",
     marginBottom: 10,
     textAlign: "center",
-    color: "#333",
+    color: "#222",
   },
 
   text: {
     fontSize: 16,
-    color: "#444",
-    lineHeight: 22,
+    color: "#555",
+    lineHeight: 24,
     textAlign: "center",
   },
 
@@ -214,68 +184,52 @@ const styles = StyleSheet.create({
   },
 
   subtitleTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "bold",
-    marginBottom: 15,
+    marginBottom: 20,
     textAlign: "center",
     color: "#222",
   },
 
   memberCard: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: "#fff",
     padding: 12,
-    marginBottom: 10,
+    marginBottom: 12,
     borderRadius: 12,
     elevation: 2,
     shadowColor: "#000",
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 1 },
   },
 
+  avatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "#6c5ce7",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+
+  avatarText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 18,
+  },
+
   memberName: {
+    flex: 1,
     fontSize: 16,
     fontWeight: "600",
     color: "#333",
   },
 
-  sidebar: {
-    position: "absolute",
-    top: 0,
-    height: "100%",
-    width: width * 0.6,
-    backgroundColor: "#ddd",
-    padding: 20,
-    elevation: 5,
-    zIndex: 100,
-  },
-
-  sidebarButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 15,
-    gap: 10,
-  },
-
-  sidebarItem: {
-    fontSize: 18,
-    color: "#333",
-  },
-
-  overlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    zIndex: 50,
-  },
-
-  bold: {
-    fontWeight: "bold",
+  noInsta: {
+    color: "#999",
+    fontStyle: "italic",
+    fontSize: 14,
   },
 });
-

@@ -16,6 +16,7 @@ import EstabelecimentosModal from "../component/EstabelecimentosModal";
 import Sidebar from "../component/Sidebar";
 import api from "../axios/axios";
 import * as SecureStore from "expo-secure-store";
+import { Feather } from "@expo/vector-icons";
 
 const { width } = Dimensions.get("window");
 
@@ -108,7 +109,9 @@ export default function Home({ navigation }) {
 
   const listaFiltrada = estabelecimentos.filter((item) => {
     const matchSearch = item.nome?.toLowerCase().includes(search.toLowerCase());
-    const matchCategory = selectedCategory ? item.tipo === selectedCategory : true;
+    const matchCategory = selectedCategory
+      ? item.tipo === selectedCategory
+      : true;
     return matchSearch && matchCategory;
   });
 
@@ -137,7 +140,7 @@ export default function Home({ navigation }) {
           value={search}
           onChangeText={setSearch}
         />
-        <AntDesign name="search" size={20} color="#fff" />
+        <Feather name="search" size={22} color="#333" />
       </View>
 
       {/* CATEGORIAS */}

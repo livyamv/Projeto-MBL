@@ -21,9 +21,15 @@ export default function CodigoModal({ visible, email, onClose, onSuccess }) {
       return;
     }
 
+    if (!email) {
+      Alert.alert("Erro", "E-mail não informado. Refaça o cadastro.");
+      return;
+    }
+
     setLoading(true);
     try {
-        await api.confirmarCodigo({ email, code: codigo });
+      console.log("Confirmando código com:", { email, code: codigo });
+      await api.post("/user/confirm", { email, code: codigo }); // rota corrigida
 
       Alert.alert("Sucesso", "Usuário criado com sucesso!");
       setCodigo("");
@@ -33,29 +39,38 @@ export default function CodigoModal({ visible, email, onClose, onSuccess }) {
       const errorMessage =
         error.response?.data?.error || "Código inválido ou expirado";
       Alert.alert("Erro", errorMessage);
-      console.log("Erro ao confirmar código:", error);
+      console.log("Erro ao confirmar código:", error?.response ?? error);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide">
-      <View style={{ flex: 1 }}> {/* <- adiciona flex:1 aqui */}
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={() => {
+        setCodigo("");
+        onClose();
+      }}
+    >
+      <View style={{ flex: 1 }}>
         <View style={styles.overlay}>
           <View style={styles.modalContainer}>
             <Text style={styles.title}>Insira o código enviado por e-mail</Text>
-  
+
             <TextInput
               placeholder="Código"
               value={codigo}
               onChangeText={setCodigo}
               keyboardType="numeric"
               style={styles.input}
+              placeholderTextColor="#666"
             />
-  
+
             <TouchableOpacity
-              style={styles.button}
+              style={[styles.button, loading && { opacity: 0.7 }]}
               onPress={handleConfirmar}
               disabled={loading}
             >
@@ -63,7 +78,7 @@ export default function CodigoModal({ visible, email, onClose, onSuccess }) {
                 {loading ? "Confirmando..." : "Confirmar Código"}
               </Text>
             </TouchableOpacity>
-  
+
             <TouchableOpacity
               style={styles.cancelButton}
               onPress={() => {
@@ -78,9 +93,7 @@ export default function CodigoModal({ visible, email, onClose, onSuccess }) {
       </View>
     </Modal>
   );
-}  
-
-
+}
 
 const styles = StyleSheet.create({
   overlay: {

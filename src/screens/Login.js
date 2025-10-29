@@ -59,7 +59,7 @@ export default function Login({ navigation }) {
 
       <TextInput
         style={styles.input}
-        placeholder="Email:"
+        placeholder="Email"
         placeholderTextColor="#000"
         keyboardType="email-address"
         autoCapitalize="none"
@@ -70,7 +70,7 @@ export default function Login({ navigation }) {
       <View style={styles.passwordContainer}>
         <TextInput
           style={styles.passwordInput}
-          placeholder="Senha:"
+          placeholder="Senha"
           placeholderTextColor="#000"
           secureTextEntry={!usuario.showPassword}
           value={usuario.senha}

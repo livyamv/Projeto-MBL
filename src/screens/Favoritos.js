@@ -9,10 +9,13 @@ import {
   Dimensions,
   Animated,
 } from "react-native";
-import { AntDesign, Entypo, Feather, MaterialIcons } from "@expo/vector-icons";
+import { AntDesign, Entypo } from "@expo/vector-icons";
+import { Portal } from "react-native-paper";
+import * as SecureStore from "expo-secure-store";
 import api from "../axios/axios";
 import EstabelecimentosModal from "../component/EstabelecimentosModal";
 import Logo from "../component/logo";
+import Sidebar from "../component/Sidebar";
 
 const { width } = Dimensions.get("window");
 
@@ -21,59 +24,78 @@ export default function Favoritos({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
-  const { width } = Dimensions.get("window");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [favoriteToRemove, setFavoriteToRemove] = useState(null);
   const slideAnim = useRef(new Animated.Value(-width * 0.6)).current;
 
-  // Carrega os favoritos do usuário logado
+  // Carrega favoritos do usuário
   const carregarFavoritos = async () => {
-  try {
-    setLoading(true);
+    try {
+      setLoading(true);
+      const userId = await SecureStore.getItemAsync("userId");
+      if (!userId) return;
 
-    const userId = await SecureStore.getItemAsync("userId");
-    if (!userId) {
-      console.warn("Usuário não logado");
-      return;
+      const response = await api.getFavoritos({ id_usuario: userId });
+      if (response.data && Array.isArray(response.data.favoritos)) {
+        setFavoritos(response.data.favoritos);
+      }
+    } catch (error) {
+      console.error(
+        "Erro ao carregar favoritos:",
+        error.response?.data || error.message
+      );
+    } finally {
+      setLoading(false);
     }
+  };
 
-   
-    const response = await api.getFavoritos({ id_usuario: userId });
-    
-    setFavoritos(response.data || []);
-  } catch (error) {
-    console.error("Erro ao carregar favoritos:", error.response?.data || error.message);
-  } finally {
-    setLoading(false);
-  }
-};
+  // Remove favorito
+  const removerFavorito = async () => {
+    try {
+      const userId = await SecureStore.getItemAsync("userId");
+      if (!userId || !favoriteToRemove) return;
 
-  // Remove favorito e atualiza lista
-  const removerFavorito = async (google_place_id) => {
-  try {
-    const userId = await SecureStore.getItemAsync("userId");
-    if (!userId) return;
+      const response = await api.removeFavorito(favoriteToRemove.id_favorito, {
+        params: { id_usuario: userId },
+      });
 
-    await api.removeFavorito({ id_usuario: userId, google_place_id });
+      if (response.status === 200) {
+        setFavoritos((prev) =>
+          prev.filter((fav) => fav.id_favorito !== favoriteToRemove.id_favorito)
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Erro ao remover favorito:",
+        error.response?.data || error.message
+      );
+    } finally {
+      setFavoriteToRemove(null);
+      setSnackbarVisible(false);
+    }
+  };
 
-    setFavoritos((prev) =>
-      prev.filter((fav) => fav.google_place_id !== google_place_id)
-    );
-  } catch (error) {
-    console.error("Erro ao remover favorito:", error.response?.data || error.message);
-  }
-};
+  const confirmarRemocao = (item) => {
+    setFavoriteToRemove(item);
+    setSnackbarVisible(true);
+  };
 
-  // Abre modal com os detalhes do estabelecimento
+  const cancelarRemocao = () => {
+    setFavoriteToRemove(null);
+    setSnackbarVisible(false);
+  };
+
   const abrirModal = (item) => {
     setSelectedItem(item);
     setModalVisible(true);
   };
 
-  function handleLogout() {
+  const handleLogout = () => {
     navigation.replace("Login");
-  }
+  };
 
-  function toggleSidebar() {
+  const toggleSidebar = () => {
     if (sidebarOpen) {
       Animated.timing(slideAnim, {
         toValue: -width * 0.6,
@@ -88,7 +110,7 @@ export default function Favoritos({ navigation }) {
         useNativeDriver: false,
       }).start();
     }
-  }
+  };
 
   useEffect(() => {
     carregarFavoritos();
@@ -104,7 +126,6 @@ export default function Favoritos({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={toggleSidebar}>
           <Entypo name="menu" size={28} color="#333" />
@@ -128,17 +149,19 @@ export default function Favoritos({ navigation }) {
         renderItem={({ item }) => (
           <Pressable onPress={() => abrirModal(item)}>
             <View style={styles.card}>
-              <View>
-                <Text style={styles.cardText}>
+              <View style={{ flex: 1, paddingRight: 10 }}>
+                <Text style={styles.cardText} numberOfLines={1}>
                   {item.nome_estabelecimento || "Sem nome"}
                 </Text>
-                <Text style={styles.cardSub}>{item.endereco || ""}</Text>
+                <Text style={styles.cardSub} numberOfLines={1}>
+                  {item.endereco || ""}
+                </Text>
               </View>
               <Pressable
-                onPress={() => removerFavorito(item.id_favorito)}
+                onPress={() => confirmarRemocao(item)}
                 style={{ padding: 5 }}
               >
-                <AntDesign name="delete" size={22} color="red" />
+                <AntDesign name="delete" size={22} color="#ff6b6b" />
               </Pressable>
             </View>
           </Pressable>
@@ -156,54 +179,85 @@ export default function Favoritos({ navigation }) {
         />
       )}
 
-      {/* Sidebar */}
-      {sidebarOpen && (
-        <>
-          <Pressable style={styles.overlay} onPress={toggleSidebar} />
-          <Animated.View style={[styles.sidebar, { left: slideAnim }]}>
-            <Pressable
-              style={styles.sidebarButton}
-              onPress={() => navigation.navigate("Perfil")}
-            >
-              <AntDesign name="user" size={22} color="#333" />
-              <Text style={styles.sidebarItem}>Perfil</Text>
-            </Pressable>
+      <Portal>
+        <SnackbarLocal
+          visible={snackbarVisible}
+          message="Esta ação é permanente e removerá o item da sua lista."
+          onConfirm={removerFavorito}
+          onCancel={cancelarRemocao}
+        />
+      </Portal>
 
-            <Pressable
-              style={styles.sidebarButton}
-              onPress={() => navigation.navigate("Favoritos")}
-            >
-              <AntDesign name="hearto" size={22} color="#333" />
-              <Text style={styles.sidebarItem}>Favoritos</Text>
-            </Pressable>
-
-            <Pressable
-              style={styles.sidebarButton}
-              onPress={() => navigation.navigate("Avaliacao")}
-            >
-              <MaterialIcons name="rate-review" size={22} color="#333" />
-              <Text style={styles.sidebarItem}>Avaliações</Text>
-            </Pressable>
-
-            <Pressable
-              style={styles.sidebarButton}
-              onPress={() => navigation.navigate("SobreNos")}
-            >
-              <Feather name="info" size={22} color="#333" />
-              <Text style={[styles.sidebarItem, styles.bold]}>Sobre Nós</Text>
-            </Pressable>
-
-            <Pressable
-              style={[styles.sidebarButton, { marginTop: "auto" }]}
-              onPress={handleLogout}
-            >
-              <AntDesign name="logout" size={22} color="black" />
-              <Text style={styles.sidebarItem}>Sair</Text>
-            </Pressable>
-          </Animated.View>
-        </>
-      )}
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        navigation={navigation}
+        onLogout={handleLogout}
+      />
     </View>
+  );
+}
+
+// Componente de snackbar local
+function SnackbarLocal({ visible, message, onConfirm, onCancel }) {
+  const [show, setShow] = useState(visible);
+  const opacity = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(0.8)).current;
+
+  useEffect(() => {
+    if (visible) {
+      setShow(true);
+      Animated.parallel([
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scale, {
+          toValue: 1,
+          friction: 6,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(opacity, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scale, {
+          toValue: 0.8,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+      ]).start(() => setShow(false));
+    }
+  }, [visible]);
+
+  if (!show) return null;
+
+  return (
+    <Pressable style={styles.portalOverlay} onPress={onCancel}>
+      <Animated.View
+        onTouchStart={(e) => e.stopPropagation()}
+        style={[styles.snackbarContent, { opacity, transform: [{ scale }] }]}
+      >
+        <Text style={styles.snackbarTitle}>Tem Certeza?</Text>
+        <Text style={styles.snackbarMessage}>{message}</Text>
+
+        <View style={styles.divider} />
+
+        <View style={styles.snackbarActions}>
+          <Pressable onPress={onCancel} style={styles.cancelButton}>
+            <Text style={styles.cancelButtonText}>Cancelar</Text>
+          </Pressable>
+          <Pressable onPress={onConfirm} style={styles.confirmButton}>
+            <Text style={styles.confirmButtonText}>Remover</Text>
+          </Pressable>
+        </View>
+      </Animated.View>
+    </Pressable>
   );
 }
 
@@ -240,37 +294,76 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderRadius: 10,
     elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
   },
   cardText: { fontSize: 16, color: "#333", fontWeight: "600" },
   cardSub: { fontSize: 14, color: "#777", marginTop: 2 },
   emptyText: { textAlign: "center", marginTop: 20, color: "#777" },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  // Sidebar
-  sidebar: {
-    position: "absolute",
-    top: 0,
-    height: "100%",
-    width: width * 0.6,
-    backgroundColor: "#ddd",
-    padding: 20,
-    elevation: 5,
-    zIndex: 100,
-  },
-  sidebarButton: {
-    flexDirection: "row",
+  portalOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    justifyContent: "center",
     alignItems: "center",
-    marginVertical: 15,
-    gap: 10,
+    zIndex: 9999,
   },
-  sidebarItem: { fontSize: 18, color: "#333" },
-  overlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    zIndex: 50,
+  snackbarContent: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 25,
+    width: "85%",
+    maxWidth: 400,
+    elevation: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    alignItems: "center",
   },
-  bold: { fontWeight: "bold" },
+  snackbarTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 5,
+  },
+  snackbarMessage: {
+    color: "#555",
+    fontSize: 15,
+    textAlign: "center",
+    lineHeight: 22,
+    marginTop: 5,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#eee",
+    width: "100%",
+    marginVertical: 20,
+  },
+  snackbarActions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    gap: 15,
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  cancelButtonText: { color: "#555", fontWeight: "bold", fontSize: 16 },
+  confirmButton: {
+    flex: 1,
+    backgroundColor: "#e74c3c",
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  confirmButtonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
 });
