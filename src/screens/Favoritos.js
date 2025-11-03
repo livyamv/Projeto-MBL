@@ -13,7 +13,7 @@ import { AntDesign, Entypo } from "@expo/vector-icons";
 import { Portal } from "react-native-paper";
 import * as SecureStore from "expo-secure-store";
 import api from "../axios/axios";
-import EstabelecimentosModal from "../component/EstabelecimentosModal";
+import FavoritoModal from "../component/FavoritoModal"; // 🔹 agora usamos o modal simplificado
 import Logo from "../component/logo";
 import Sidebar from "../component/Sidebar";
 
@@ -29,7 +29,6 @@ export default function Favoritos({ navigation }) {
   const [favoriteToRemove, setFavoriteToRemove] = useState(null);
   const slideAnim = useRef(new Animated.Value(-width * 0.6)).current;
 
-  // Carrega favoritos do usuário
   const carregarFavoritos = async () => {
     try {
       setLoading(true);
@@ -50,7 +49,6 @@ export default function Favoritos({ navigation }) {
     }
   };
 
-  // Remove favorito
   const removerFavorito = async () => {
     try {
       const userId = await SecureStore.getItemAsync("userId");
@@ -172,7 +170,7 @@ export default function Favoritos({ navigation }) {
       />
 
       {selectedItem && (
-        <EstabelecimentosModal
+        <FavoritoModal
           visible={modalVisible}
           onClose={() => setModalVisible(false)}
           item={selectedItem}
@@ -198,7 +196,6 @@ export default function Favoritos({ navigation }) {
   );
 }
 
-// Componente de snackbar local
 function SnackbarLocal({ visible, message, onConfirm, onCancel }) {
   const [show, setShow] = useState(visible);
   const opacity = useRef(new Animated.Value(0)).current;

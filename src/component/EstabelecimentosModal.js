@@ -9,7 +9,6 @@ import {
   Linking,
   Alert,
   TextInput,
-  Button,
   TouchableOpacity,
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -18,12 +17,7 @@ import {
 import { AntDesign } from "@expo/vector-icons";
 import api from "../axios/axios";
 
-export default function EstabelecimentosModal({
-  visible,
-  onClose,
-  item,
-  userToken,
-}) {
+export default function EstabelecimentosModal({ visible, onClose, item }) {
   const [favorito, setFavorito] = useState(false);
   const [favoritoId, setFavoritoId] = useState(null);
   const [avaliacoes, setAvaliacoes] = useState([]);
@@ -34,22 +28,23 @@ export default function EstabelecimentosModal({
   const [loadingAval, setLoadingAval] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Buscar se o estabelecimento já é favorito
   useEffect(() => {
     if (!visible || !item?.place_id) return;
-
     let mounted = true;
+
     const fetchFavorito = async () => {
       try {
         setLoadingFav(true);
-        const response = await api.getFavoritos();
+        const res = await api.getFavoritos();
         if (!mounted) return;
-
-        // Filtra apenas o favorito deste estabelecimento
-        const fav = response.data.favoritos.find(
+        const favoritosArray = Array.isArray(res.data.favoritos)
+          ? res.data.favoritos
+          : Array.isArray(res.data)
+          ? res.data
+          : [];
+        const fav = favoritosArray.find(
           (f) => f.google_place_id === item.place_id
         );
-
         if (fav) {
           setFavorito(true);
           setFavoritoId(fav.id_favorito);
@@ -57,60 +52,51 @@ export default function EstabelecimentosModal({
           setFavorito(false);
           setFavoritoId(null);
         }
-      } catch (error) {
-        console.error(
-          "Erro ao buscar favoritos:",
-          error.response?.data || error.message
-        );
+      } catch (err) {
+        console.error("Erro ao buscar favoritos:", err.response?.data || err);
       } finally {
         if (mounted) setLoadingFav(false);
       }
     };
 
+    const fetchAvaliacoes = async () => {
+      try {
+        setLoadingAval(true);
+        const r = await api.getAvaliacoesPorLocal(item.place_id);
+        setAvaliacoes(r.data.avaliacoes || []);
+        if (r.data.media_notas !== undefined) setMediaNotas(r.data.media_notas);
+      } catch (err) {
+        console.error(
+          "Erro ao buscar avaliações:",
+          err.response?.data || err.message || err
+        );
+      } finally {
+        if (mounted) setLoadingAval(false);
+      }
+    };
+
     fetchFavorito();
+    fetchAvaliacoes();
+
     return () => {
       mounted = false;
     };
   }, [visible, item]);
 
-  // Buscar avaliações do lugar
-  const fetchAvaliacoes = async () => {
-    if (!item?.place_id) return;
-    try {
-      setLoadingAval(true);
-      const res = await api.get(`/avaliacoes/${item.place_id}`);
-      setAvaliacoes(res.data.avaliacoes || []);
-      if (res.data.media_notas !== undefined) {
-        setMediaNotas(res.data.media_notas);
-      }
-    } catch (error) {
-      console.error(
-        "Erro ao buscar avaliações do lugar:",
-        error.response?.data || error.message
-      );
-    } finally {
-      setLoadingAval(false);
-    }
-  };
-
-  useEffect(() => {
-    if (visible && item?.place_id) fetchAvaliacoes();
-  }, [visible, item]);
-
-  // Abrir site do estabelecimento
   const abrirSite = () => {
-    if (item?.site)
+    if (item?.site) {
       Linking.openURL(item.site).catch((err) =>
         console.error("Erro ao abrir site:", err)
       );
+    }
   };
 
-  // Adicionar/remover favorito
   const toggleFavorito = async () => {
-    try {
-      if (!item?.place_id)
-        return Alert.alert("Erro", "ID do estabelecimento não encontrado.");
+    if (!item?.place_id) {
+      return Alert.alert("Erro", "ID do estabelecimento não encontrado.");
+    }
 
+    try {
       setLoadingFav(true);
 
       if (!favorito) {
@@ -119,43 +105,44 @@ export default function EstabelecimentosModal({
           nome_estabelecimento: item.nome,
           endereco: item.endereco,
         };
-        const response = await api.addFavorito(payload);
+        const resp = await api.addFavorito(payload);
         setFavorito(true);
-        setFavoritoId(response.data?.id_favorito ?? null);
+        setFavoritoId(resp.data?.id_favorito ?? null);
       } else {
         let idToRemove = favoritoId;
         if (!idToRemove) {
-          const response = await api.getFavoritos();
-          const fav = response.data.favoritos.find(
-            (f) => f.google_place_id === item.place_id
-          );
-          idToRemove = fav?.id_favorito ?? null;
+          const resp = await api.getFavoritos();
+          const favs = Array.isArray(resp.data.favoritos)
+            ? resp.data.favoritos
+            : Array.isArray(resp.data)
+            ? resp.data
+            : [];
+          const found = favs.find((f) => f.google_place_id === item.place_id);
+          idToRemove = found?.id_favorito ?? null;
         }
 
-        if (!idToRemove) return;
+        if (!idToRemove) {
+          setFavorito(false);
+          setFavoritoId(null);
+          return;
+        }
 
         await api.removeFavorito(idToRemove);
         setFavorito(false);
         setFavoritoId(null);
       }
-    } catch (error) {
-      console.error(
-        "Erro ao atualizar favoritos:",
-        error.response?.data || error.message
-      );
-      Alert.alert("Erro", "Não foi possível atualizar os favoritos.");
+    } catch (err) {
+      console.error("Erro ao atualizar favoritos:", err.response?.data || err);
+      Alert.alert("Erro", "Não foi possível atualizar seus favoritos.");
     } finally {
       setLoadingFav(false);
     }
   };
 
-  // Criar comentário
   const handleCreate = async () => {
-    if (!userToken) return Alert.alert("Erro", "Usuário não autenticado.");
     if (!comentario.trim())
       return Alert.alert("Atenção", "Digite um comentário");
-    if (nota === 0)
-      return Alert.alert("Atenção", "Escolha uma nota de 1 a 5 estrelas");
+    if (nota === 0) return Alert.alert("Atenção", "Escolha uma nota");
 
     try {
       setSubmitting(true);
@@ -166,18 +153,16 @@ export default function EstabelecimentosModal({
         nome_estabelecimento: item.nome,
         endereco: item.endereco,
       };
-
       await api.createAvaliacao(avaliacao);
-
       setComentario("");
       setNota(0);
-      fetchAvaliacoes();
+      // recarrega avaliações
+      const r = await api.getAvaliacoesPorLocal(item.place_id);
+      setAvaliacoes(r.data.avaliacoes || []);
+      if (r.data.media_notas !== undefined) setMediaNotas(r.data.media_notas);
       Alert.alert("Sucesso", "Comentário enviado!");
-    } catch (error) {
-      console.error(
-        "Erro ao criar comentário:",
-        error.response?.data || error.message
-      );
+    } catch (err) {
+      console.error("Erro ao criar comentário:", err.response?.data || err);
       Alert.alert("Erro", "Não foi possível enviar o comentário.");
     } finally {
       setSubmitting(false);
@@ -187,92 +172,147 @@ export default function EstabelecimentosModal({
   if (!item) return null;
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={true}>
+    <Modal visible={visible} animationType="slide" transparent>
       <View style={styles.overlay}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : undefined}
           style={styles.containerWrapper}
         >
           <View style={styles.container}>
+            {/* HEADER */}
             <View style={styles.header}>
-              <View style={styles.headerContent}>
-                <View style={styles.titleContainer}>
-                  <Text style={styles.title}>{item.nome}</Text>
-                  <Text style={styles.subtitle}>{item.categoria}</Text>
-                </View>
-                <TouchableOpacity
-                  style={styles.favoriteButton}
+              <View style={styles.headerLeft}>
+                <Text style={styles.name} numberOfLines={2}>
+                  {item.nome}
+                </Text>
+                {item.categoria ? (
+                  <Text style={styles.category}>{item.categoria}</Text>
+                ) : null}
+              </View>
+
+              <View style={styles.headerRight}>
+                <Pressable
                   onPress={toggleFavorito}
+                  style={({ pressed }) => [
+                    styles.heartWrap,
+                    pressed && { opacity: 0.8 },
+                  ]}
                   disabled={loadingFav}
                 >
-                  <AntDesign
-                    name="heart"
-                    size={24}
-                    color={favorito ? "#e91e63" : "#C0C0C0"}
-                  />
-                </TouchableOpacity>
+                  {loadingFav ? (
+                    <ActivityIndicator size="small" color="#e91e63" />
+                  ) : (
+                    <AntDesign
+                      name="heart"
+                      size={22}
+                      color={favorito ? "#e91e63" : "#C0C0C0"}
+                    />
+                  )}
+                </Pressable>
+                <Pressable
+                  onPress={onClose}
+                  style={({ pressed }) => [
+                    styles.closeBtn,
+                    pressed && { opacity: 0.8 },
+                  ]}
+                >
+                  <Text style={styles.closeText}>Fechar</Text>
+                </Pressable>
               </View>
             </View>
 
+            {/* BODY */}
             <View style={styles.body}>
-              <ScrollView showsVerticalScrollIndicator={true}>
-                <Text style={styles.infoText}>Endereço: {item.endereco}</Text>
-                <Text style={styles.infoText}>
-                  Telefone: {item.telefone || "Não informado"}
-                </Text>
-                <Text style={styles.infoText}>
-                  Horários: {item.horarios?.join(", ") || "Não informado"}
-                </Text>
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 30 }}
+              >
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoTitle}>Endereço</Text>
+                  <Text style={styles.infoValue}>{item.endereco || "—"}</Text>
+                </View>
 
                 <View style={styles.infoRow}>
-                  <Text style={styles.infoText}>Site: </Text>
-                  {item.site ? (
-                    <Pressable onPress={abrirSite}>
-                      <Text style={styles.linkText}>{item.site}</Text>
-                    </Pressable>
+                  <Text style={styles.infoTitle}>Telefone</Text>
+                  <Text style={styles.infoValue}>{item.telefone || "—"}</Text>
+                </View>
+
+                {/* Horários */}
+                <View style={styles.scheduleSection}>
+                  <Text style={styles.sectionTitle}>Horários</Text>
+                  {item.horarios && item.horarios.length > 0 ? (
+                    <View style={styles.scheduleContainer}>
+                      {item.horarios.map((horario, index) => (
+                        <View key={index} style={styles.scheduleBox}>
+                          <Text style={styles.scheduleText}>{horario}</Text>
+                        </View>
+                      ))}
+                    </View>
                   ) : (
-                    <Text style={styles.infoText}>Não informado</Text>
+                    <Text style={styles.infoValue}>Não informado</Text>
                   )}
                 </View>
 
-                <Text style={styles.infoText}>
-                  Avaliação:{" "}
-                  {mediaNotas !== null ? mediaNotas.toFixed(1) : "Sem avaliação"}
-                </Text>
+                {/* Botão de site */}
+                {item.site ? (
+                  <Pressable onPress={abrirSite} style={styles.linkRow}>
+                    <Text style={styles.linkText}>{item.site}</Text>
+                  </Pressable>
+                ) : null}
 
-                <Text style={styles.sectionTitle}>Comentários:</Text>
+                {/* Divider */}
+                <View style={styles.divider} />
+
+                <View style={styles.ratingHeader}>
+                  <Text style={styles.sectionTitle}>Avaliação</Text>
+                  <Text style={styles.avgText}>
+                    {mediaNotas !== null
+                      ? mediaNotas.toFixed(1)
+                      : "Sem avaliação"}
+                  </Text>
+                </View>
+
+                <Text style={[styles.sectionTitle, { marginTop: 8 }]}>
+                  Comentários
+                </Text>
                 {loadingAval ? (
-                  <ActivityIndicator />
+                  <ActivityIndicator style={{ marginVertical: 10 }} />
+                ) : avaliacoes.length === 0 ? (
+                  <Text style={styles.emptyComments}>
+                    Seja o primeiro a avaliar.
+                  </Text>
                 ) : (
-                  <View>
-                    {avaliacoes.map((avaliacao) => (
-                      <View
-                        key={avaliacao.id_avaliacao}
-                        style={styles.commentBox}
-                      >
+                  avaliacoes.map((a) => (
+                    <View key={a.id_avaliacao} style={styles.commentBox}>
+                      <View style={styles.commentHeader}>
                         <Text style={styles.commentUser}>
-                          {avaliacao.usuario || "Anônimo"}
+                          {a.usuario || "Anônimo"}
                         </Text>
-                        <Text style={styles.commentText}>
-                          {avaliacao.comentario}
-                        </Text>
-                        <Text style={styles.commentRating}>
-                          ⭐ {avaliacao.nota}/5
-                        </Text>
+                        <Text style={styles.commentRating}>⭐ {a.nota}/5</Text>
                       </View>
-                    ))}
-                  </View>
+                      <Text style={styles.commentText}>{a.comentario}</Text>
+                    </View>
+                  ))
                 )}
 
-                <Text style={styles.sectionTitle}>Deixe sua avaliação:</Text>
+                {/* Formulário */}
+                <Text style={[styles.sectionTitle, { marginTop: 16 }]}>
+                  Deixe sua avaliação:
+                </Text>
+
                 <View style={styles.ratingContainer}>
-                  {[1, 2, 3, 4, 5].map((star) => (
+                  {[1, 2, 3, 4, 5].map((s) => (
                     <TouchableOpacity
-                      key={star}
-                      onPress={() => setNota(star)}
+                      key={s}
+                      onPress={() => setNota(s)}
+                      activeOpacity={0.7}
                       style={styles.starButton}
                     >
-                      <Text style={styles.star}>{star <= nota ? "⭐" : "☆"}</Text>
+                      <Text
+                        style={[styles.star, s <= nota && styles.starActive]}
+                      >
+                        {s <= nota ? "★" : "☆"}
+                      </Text>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -284,18 +324,24 @@ export default function EstabelecimentosModal({
                   onChangeText={setComentario}
                   multiline
                   numberOfLines={4}
+                  editable={!submitting}
                 />
-                <Button
-                  title={submitting ? "Enviando..." : "Enviar comentário"}
+
+                <TouchableOpacity
+                  style={[styles.submitButton, submitting && { opacity: 0.7 }]}
                   onPress={handleCreate}
                   disabled={submitting}
-                />
+                >
+                  {submitting ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={styles.submitButtonText}>
+                      ENVIAR COMENTÁRIO
+                    </Text>
+                  )}
+                </TouchableOpacity>
               </ScrollView>
             </View>
-
-            <Pressable onPress={onClose} style={styles.closeButton}>
-              <Text style={styles.closeButtonText}>Fechar</Text>
-            </Pressable>
           </View>
         </KeyboardAvoidingView>
       </View>
@@ -306,83 +352,131 @@ export default function EstabelecimentosModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(0,0,0,0.45)",
     justifyContent: "center",
     alignItems: "center",
   },
   containerWrapper: { width: "100%", alignItems: "center" },
   container: {
-    width: "90%",
-    height: "90%",
-    backgroundColor: "#f0f0f0",
-    borderRadius: 12,
-    borderWidth: 15,
-    borderColor: "rgba(72, 85, 132, 0.80)",
-    flexDirection: "column",
+    width: "92%",
+    height: "88%",
+    backgroundColor: "#f8f9fb",
+    borderRadius: 16,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.06)",
   },
-  header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 10 },
-  headerContent: {
+  header: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    paddingHorizontal: 18,
+    paddingTop: 18,
+    paddingBottom: 8,
+    alignItems: "center",
     justifyContent: "space-between",
+    backgroundColor: "#ffffff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#eef0f3",
   },
-  titleContainer: { flex: 1, alignItems: "center" },
-  favoriteButton: { padding: 5, position: "absolute", right: 20, top: 20 },
-  title: { fontSize: 22, fontWeight: "700" },
-  subtitle: { fontSize: 14, color: "#777" },
-  body: { flex: 1, paddingHorizontal: 20, paddingVertical: 15 },
-  infoText: { marginBottom: 10, fontSize: 14 },
-  infoRow: {
+  headerLeft: { flex: 1, paddingRight: 8 },
+  name: { fontSize: 18, fontWeight: "700", color: "#233044" },
+  category: { fontSize: 13, color: "#6b7280", marginTop: 4 },
+  headerRight: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
-    flexWrap: "wrap",
+    gap: 8,
   },
-  linkText: { fontSize: 14, color: "#5A6FA1", textDecorationLine: "underline" },
-  sectionTitle: {
-    fontWeight: "bold",
-    fontSize: 16,
-    marginBottom: 10,
-    marginTop: 10,
+  heartWrap: {
+    backgroundColor: "#fff",
+    padding: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(233,30,99,0.12)",
+    marginRight: 8,
   },
+  closeBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    backgroundColor: "#f1f5f9",
+  },
+  closeText: { color: "#374151", fontWeight: "600" },
+  body: { flex: 1, paddingHorizontal: 18, paddingTop: 12 },
+  infoRow: { marginBottom: 10 },
+  infoTitle: { fontSize: 13, color: "#6b7280", fontWeight: "600" },
+  infoValue: { marginTop: 4, fontSize: 15, color: "#111827" },
+  linkRow: { marginTop: 6, marginBottom: 10 },
+  linkText: { color: "#2563eb", textDecorationLine: "underline" },
+  divider: { height: 1, backgroundColor: "#f1f5f9", marginVertical: 12 },
+  ratingHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  sectionTitle: { fontSize: 16, fontWeight: "700", color: "#111827" },
+  avgText: { fontSize: 14, color: "#374151", fontWeight: "600" },
+  emptyComments: { color: "#6b7280", marginVertical: 8 },
   commentBox: {
     backgroundColor: "#fff",
-    padding: 10,
-    marginBottom: 15,
-    borderRadius: 6,
-    elevation: 2,
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#eef2f6",
   },
-  commentUser: { fontWeight: "600", marginBottom: 5 },
-  commentText: { fontSize: 14, marginBottom: 5, color: "#333" },
-  commentRating: { marginBottom: 8 },
+  commentHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  commentUser: { fontWeight: "700", color: "#111827" },
+  commentRating: { color: "#f59e0b", fontWeight: "700" },
+  commentText: { color: "#374151", lineHeight: 20 },
   ratingContainer: {
     flexDirection: "row",
     justifyContent: "center",
-    marginBottom: 15,
+    marginVertical: 8,
   },
-  starButton: { marginHorizontal: 10, padding: 5 },
-  star: { fontSize: 32 },
+  starButton: { marginHorizontal: 6 },
+  star: { fontSize: 28, color: "#cbd5e1" },
+  starActive: { color: "#FFD700" },
   input: {
     borderWidth: 1,
-    borderColor: "#ddd",
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 15,
+    borderColor: "#e6eef7",
+    padding: 14,
+    borderRadius: 10,
     backgroundColor: "#fff",
-    minHeight: 80,
+    minHeight: 100,
     textAlignVertical: "top",
+    fontSize: 15,
+    marginTop: 8,
   },
-  closeButton: {
-    backgroundColor: "#5A6FA1",
+  submitButton: {
+    backgroundColor: "#5f7f9aff",
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 14,
+    marginBottom: 30,
+  },
+  submitButtonText: { color: "#fff", fontWeight: "700", fontSize: 15 },
+
+  // Estilos de Horários
+  scheduleSection: { marginBottom: 15 },
+  scheduleContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  scheduleBox: {
+    backgroundColor: "#E8ECF8",
     borderRadius: 8,
-    paddingVertical: 10,
-    marginHorizontal: 20,
-    marginBottom: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
   },
-  closeButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    textAlign: "center",
-    fontWeight: "600",
+  scheduleText: {
+    fontSize: 13,
+    color: "#2c3e50",
+    fontWeight: "500",
   },
 });

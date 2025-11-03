@@ -1,4 +1,3 @@
-// Snackbar.js
 import React, { useState, useRef, useEffect } from "react";
 import { View, Text, Pressable, Animated, StyleSheet } from "react-native";
 import { Portal } from "react-native-paper";
