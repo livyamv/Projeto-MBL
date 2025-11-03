@@ -132,7 +132,7 @@ export default function SobreNos() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f0f4f8",
+    backgroundColor: "#e5e5e5",
     padding: 20,
   },
 

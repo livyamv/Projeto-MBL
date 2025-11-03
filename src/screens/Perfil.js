@@ -12,6 +12,9 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
+  Alert,
 } from "react-native";
 import { AntDesign, Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -165,6 +168,40 @@ export default function Perfil({ navigation }) {
     }
   };
 
+  const excluirConta = async () => {
+    Alert.alert(
+      "Excluir conta",
+      "Tem certeza de que deseja excluir sua conta? Essa ação não pode ser desfeita.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Excluir",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const id = await SecureStore.getItemAsync("userId");
+              if (!id) {
+                showSnackbar("Erro: usuário não encontrado.");
+                return;
+              }
+
+              await api.delete(`/user/${id}`);
+              await SecureStore.deleteItemAsync("userId");
+              await SecureStore.deleteItemAsync("token");
+              await SecureStore.deleteItemAsync("fotoPerfil");
+
+              showSnackbar("Conta excluída com sucesso.");
+              setTimeout(() => navigation.navigate("Login"), 1500);
+            } catch (error) {
+              console.log(error.response?.data || error);
+              showSnackbar("Não foi possível excluir a conta.");
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const showSnackbar = (message) => {
     setSnackbarMessage(message);
     setSnackbarVisible(true);
@@ -199,155 +236,175 @@ export default function Perfil({ navigation }) {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <ScrollView contentContainerStyle={styles.container}>
-        <LinearGradient
-          colors={["#5D6EAA", "#8F9AAC"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.header}
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <KeyboardAvoidingView
+        style={{ flex: 1, backgroundColor: "#D9D9D9" }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView
+          contentContainerStyle={styles.container}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <AntDesign
-            name="left"
-            size={24}
-            color="#fff"
-            onPress={() => navigation.navigate("Home")}
-          />
-        </LinearGradient>
+          <LinearGradient
+            colors={["#5D6EAA", "#8F9AAC"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.header}
+          >
+            <AntDesign
+              name="left"
+              size={24}
+              color="#fff"
+              onPress={() => navigation.navigate("Home")}
+            />
+          </LinearGradient>
 
-        <TouchableOpacity onPress={abrirFotoModal}>
-          <Image
-            source={
-              fotoPerfil
-                ? { uri: fotoPerfil }
-                : require("../../assets/pessoa.jpg")
-            }
-            style={styles.fotoPerfil}
-          />
-        </TouchableOpacity>
+          <TouchableOpacity onPress={abrirFotoModal}>
+            <Image
+              source={
+                fotoPerfil
+                  ? { uri: fotoPerfil }
+                  : require("../../assets/pessoa.jpg")
+              }
+              style={styles.fotoPerfil}
+            />
+          </TouchableOpacity>
 
-        <View style={styles.form}>
-          <TextInput
-            style={styles.input}
-            value={nome}
-            onChangeText={setNome}
-            placeholder="Nome"
-          />
-          <TextInput
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            placeholder="Email"
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-          <TextInput
-            style={styles.input}
-            value={cpf}
-            placeholder="CPF"
-            keyboardType="numeric"
-            editable={false}
-          />
+          <View style={styles.form}>
+            <TextInput
+              style={styles.input}
+              value={nome}
+              onChangeText={setNome}
+              placeholder="Nome"
+            />
+            <TextInput
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
+              placeholder="Email"
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            <TextInput
+              style={styles.input}
+              value={cpf}
+              placeholder="CPF"
+              keyboardType="numeric"
+              editable={false}
+            />
 
-          <Pressable onPress={() => setMostrarCamposSenha(!mostrarCamposSenha)}>
-            <Text
-              style={{ color: "#5D6EAA", fontWeight: "600", marginBottom: 10 }}
+            <Pressable
+              onPress={() => setMostrarCamposSenha(!mostrarCamposSenha)}
             >
-              Alterar senha
-            </Text>
-          </Pressable>
-
-          {mostrarCamposSenha && (
-            <View>
-              <TextInput
-                style={styles.input}
-                value={senhaAtual}
-                onChangeText={setSenhaAtual}
-                placeholder="Senha atual"
-                secureTextEntry
-              />
-              <TextInput
-                style={styles.input}
-                value={novaSenha}
-                onChangeText={setNovaSenha}
-                placeholder="Nova senha"
-                secureTextEntry
-              />
-            </View>
-          )}
-        </View>
-
-        <TouchableOpacity style={styles.botao} onPress={atualizarPerfil}>
-          <Text style={styles.textoBotao}>Salvar alterações</Text>
-          <Feather name="check" size={18} color="#fff" />
-        </TouchableOpacity>
-
-        {/* Snackbar */}
-        {snackbarVisible && (
-          <Portal>
-            <Pressable style={styles.portalOverlay}>
-              <Animated.View
-                style={[
-                  styles.snackbarContent,
-                  { opacity, transform: [{ scale }] },
-                ]}
+              <Text
+                style={{
+                  color: "#5D6EAA",
+                  fontWeight: "600",
+                  marginBottom: 10,
+                }}
               >
-                <Text style={styles.snackbarMessage}>{snackbarMessage}</Text>
-              </Animated.View>
+                Alterar senha
+              </Text>
             </Pressable>
-          </Portal>
-        )}
 
-        {/* Bottom Sheet (foto) */}
-        {fotoModalVisible && (
-          <Portal>
-            <Pressable style={styles.overlay} onPress={fecharFotoModal}>
-              <Animated.View
-                style={[
-                  styles.bottomSheet,
-                  { transform: [{ translateY: slideAnim }] },
-                ]}
-              >
-                <Text style={styles.sheetTitle}>Foto do Perfil</Text>
+            {mostrarCamposSenha && (
+              <View>
+                <TextInput
+                  style={styles.input}
+                  value={senhaAtual}
+                  onChangeText={setSenhaAtual}
+                  placeholder="Senha atual"
+                  secureTextEntry
+                />
+                <TextInput
+                  style={styles.input}
+                  value={novaSenha}
+                  onChangeText={setNovaSenha}
+                  placeholder="Nova senha"
+                  secureTextEntry
+                />
+              </View>
+            )}
+          </View>
 
-                <Pressable style={styles.sheetButton} onPress={tirarFoto}>
-                  <Feather name="camera" size={20} color="#5D6EAA" />
-                  <Text style={styles.sheetButtonText}>Tirar foto</Text>
-                </Pressable>
+          <TouchableOpacity style={styles.botao} onPress={atualizarPerfil}>
+            <Text style={styles.textoBotao}>Salvar alterações</Text>
+            <Feather name="check" size={18} color="#fff" />
+          </TouchableOpacity>
 
-                <Pressable style={styles.sheetButton} onPress={escolherFoto}>
-                  <Feather name="image" size={20} color="#5D6EAA" />
-                  <Text style={styles.sheetButtonText}>
-                    Escolher da galeria
-                  </Text>
-                </Pressable>
+          <TouchableOpacity
+            style={[styles.botao, { backgroundColor: "#e74c3c" }]}
+            onPress={excluirConta}
+          >
+            <Text style={styles.textoBotao}>Excluir conta</Text>
+            <Feather name="trash-2" size={18} color="#fff" />
+          </TouchableOpacity>
 
-                <Pressable
-                  style={[styles.sheetButton, styles.cancelarBtn]}
-                  onPress={fecharFotoModal}
+          {snackbarVisible && (
+            <Portal>
+              <Pressable style={styles.portalOverlay}>
+                <Animated.View
+                  style={[
+                    styles.snackbarContent,
+                    { opacity, transform: [{ scale }] },
+                  ]}
                 >
-                  <Text style={[styles.sheetButtonText, { color: "#e74c3c" }]}>
-                    Cancelar
-                  </Text>
-                </Pressable>
-              </Animated.View>
-            </Pressable>
-          </Portal>
-        )}
-      </ScrollView>
-    </KeyboardAvoidingView>
+                  <Text style={styles.snackbarMessage}>{snackbarMessage}</Text>
+                </Animated.View>
+              </Pressable>
+            </Portal>
+          )}
+
+          {fotoModalVisible && (
+            <Portal>
+              <Pressable style={styles.overlay} onPress={fecharFotoModal}>
+                <Animated.View
+                  style={[
+                    styles.bottomSheet,
+                    { transform: [{ translateY: slideAnim }] },
+                  ]}
+                >
+                  <Text style={styles.sheetTitle}>Foto do Perfil</Text>
+
+                  <Pressable style={styles.sheetButton} onPress={tirarFoto}>
+                    <Feather name="camera" size={20} color="#5D6EAA" />
+                    <Text style={styles.sheetButtonText}>Tirar foto</Text>
+                  </Pressable>
+
+                  <Pressable style={styles.sheetButton} onPress={escolherFoto}>
+                    <Feather name="image" size={20} color="#5D6EAA" />
+                    <Text style={styles.sheetButtonText}>
+                      Escolher da galeria
+                    </Text>
+                  </Pressable>
+
+                  <Pressable
+                    style={[styles.sheetButton, styles.cancelarBtn]}
+                    onPress={fecharFotoModal}
+                  >
+                    <Text
+                      style={[styles.sheetButtonText, { color: "#e74c3c" }]}
+                    >
+                      Cancelar
+                    </Text>
+                  </Pressable>
+                </Animated.View>
+              </Pressable>
+            </Portal>
+          )}
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: "#D9D9D9",
+    backgroundColor: "#e5e5e5",
     alignItems: "center",
-    paddingBottom: 50,
+    paddingBottom: 120,
   },
   header: {
     width: "100%",

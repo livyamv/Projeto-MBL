@@ -23,7 +23,6 @@ export default function EstabelecimentosModal({
   onClose,
   item,
   userToken,
-  id_usuario,
 }) {
   const [favorito, setFavorito] = useState(false);
   const [favoritoId, setFavoritoId] = useState(null);
@@ -35,9 +34,9 @@ export default function EstabelecimentosModal({
   const [loadingAval, setLoadingAval] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Buscar favoritos do usuário
+  // Buscar se o estabelecimento já é favorito
   useEffect(() => {
-    if (!visible || !item || !item.id || !id_usuario) return;
+    if (!visible || !item?.place_id) return;
 
     let mounted = true;
     const fetchFavorito = async () => {
@@ -45,9 +44,12 @@ export default function EstabelecimentosModal({
         setLoadingFav(true);
         const response = await api.getFavoritos();
         if (!mounted) return;
-        const fav = response.data.find(
-          (f) => f.google_place_id === item.id && f.id_usuario === id_usuario
+
+        // Filtra apenas o favorito deste estabelecimento
+        const fav = response.data.favoritos.find(
+          (f) => f.google_place_id === item.place_id
         );
+
         if (fav) {
           setFavorito(true);
           setFavoritoId(fav.id_favorito);
@@ -69,11 +71,11 @@ export default function EstabelecimentosModal({
     return () => {
       mounted = false;
     };
-  }, [visible, item, id_usuario]);
+  }, [visible, item]);
 
   // Buscar avaliações do lugar
   const fetchAvaliacoes = async () => {
-    if (!item || !item.place_id) return;
+    if (!item?.place_id) return;
     try {
       setLoadingAval(true);
       const res = await api.get(`/avaliacoes/${item.place_id}`);
@@ -92,7 +94,7 @@ export default function EstabelecimentosModal({
   };
 
   useEffect(() => {
-    if (visible && item && item.place_id) fetchAvaliacoes();
+    if (visible && item?.place_id) fetchAvaliacoes();
   }, [visible, item]);
 
   // Abrir site do estabelecimento
@@ -106,16 +108,14 @@ export default function EstabelecimentosModal({
   // Adicionar/remover favorito
   const toggleFavorito = async () => {
     try {
-      if (!id_usuario) return Alert.alert("Erro", "Usuário não identificado.");
-      if (!item?.id)
+      if (!item?.place_id)
         return Alert.alert("Erro", "ID do estabelecimento não encontrado.");
 
       setLoadingFav(true);
 
       if (!favorito) {
         const payload = {
-          id_usuario,
-          google_place_id: item.id,
+          google_place_id: item.place_id,
           nome_estabelecimento: item.nome,
           endereco: item.endereco,
         };
@@ -126,17 +126,13 @@ export default function EstabelecimentosModal({
         let idToRemove = favoritoId;
         if (!idToRemove) {
           const response = await api.getFavoritos();
-          const fav = response.data.find(
-            (f) => f.google_place_id === item.id && f.id_usuario === id_usuario
+          const fav = response.data.favoritos.find(
+            (f) => f.google_place_id === item.place_id
           );
           idToRemove = fav?.id_favorito ?? null;
         }
 
-        if (!idToRemove) {
-          setFavorito(false);
-          setFavoritoId(null);
-          return;
-        }
+        if (!idToRemove) return;
 
         await api.removeFavorito(idToRemove);
         setFavorito(false);
@@ -164,7 +160,6 @@ export default function EstabelecimentosModal({
     try {
       setSubmitting(true);
       const avaliacao = {
-        id_usuario,
         google_place_id: item.place_id,
         comentario: comentario.trim(),
         nota,

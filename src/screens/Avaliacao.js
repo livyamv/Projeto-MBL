@@ -198,7 +198,7 @@ export default function MinhasAvaliacoes({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F4F4F4",
+    backgroundColor: "#e5e5e5",
     paddingTop: 40,
     paddingHorizontal: 16,
   },
@@ -230,8 +230,10 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 12,
-    color: "#777",
-    marginTop: 4,
+    color: "#666",
+    marginTop: 3,
+    textAlign: "right",
+    fontStyle: "italic",
   },
   sectionTitle: {
     fontSize: 25,

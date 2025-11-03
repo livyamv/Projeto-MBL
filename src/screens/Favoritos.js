@@ -161,7 +161,7 @@ export default function Favoritos({ navigation }) {
                 onPress={() => confirmarRemocao(item)}
                 style={{ padding: 5 }}
               >
-                <AntDesign name="delete" size={22} color="#ff6b6b" />
+                <AntDesign name="heart" size={22} color="#ff6b6b" />
               </Pressable>
             </View>
           </Pressable>
