@@ -21,14 +21,30 @@ export default function MinhasAvaliacoes({ navigation }) {
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [avaliacaoSelecionada, setAvaliacaoSelecionada] = useState(null);
-  const [confirmMode, setConfirmMode] = useState(false); // controla se o snackbar é de confirmação ou mensagem simples
+  const [confirmMode, setConfirmMode] = useState(false);
 
+  // 🔹 Buscar avaliações do usuário
   const fetchAvaliacoes = async () => {
     try {
       const response = await api.getAvaliacoesUsuario();
-      setAvaliacoes(response.data.avaliacoes || []);
+
+      if (response?.status === 404 || !response?.data?.avaliacoes) {
+        setAvaliacoes([]);
+        return;
+      }
+
+      const listaAvaliacoes = Array.isArray(response.data.avaliacoes)
+        ? response.data.avaliacoes
+        : [];
+
+      setAvaliacoes(listaAvaliacoes);
     } catch (err) {
-      console.error("Erro ao buscar avaliações:", err);
+      // 🔸 Se o erro for 404 (nenhuma avaliação), não mostrar erro no console
+      if (err.response && err.response.status === 404) {
+        setAvaliacoes([]);
+      } else {
+        console.error("Erro inesperado ao buscar avaliações:", err);
+      }
     } finally {
       setLoading(false);
     }
@@ -73,10 +89,9 @@ export default function MinhasAvaliacoes({ navigation }) {
     setSnackbarVisible(true);
   };
 
-  // Função para exibir snackbar de forma automática
-  const mostrarSnackbar = (mensagem, tempo = 500) => {
+  const mostrarSnackbar = (mensagem, tempo = 2000) => {
     setSnackbarMessage(mensagem);
-    setConfirmMode(false); // mensagem simples
+    setConfirmMode(false);
     setSnackbarVisible(true);
 
     setTimeout(() => {
@@ -84,21 +99,19 @@ export default function MinhasAvaliacoes({ navigation }) {
     }, tempo);
   };
 
-  // Função para confirmar exclusão da avaliação
   const confirmarExclusao = async () => {
     try {
       await api.deleteAvaliacao(avaliacaoSelecionada);
-      // Remove a avaliação da lista
       setAvaliacoes((prev) =>
         prev.filter((a) => a.id_avaliacao !== avaliacaoSelecionada)
       );
-      mostrarSnackbar("Avaliação excluída com sucesso!"); // exibe mensagem de sucesso
+      mostrarSnackbar("Avaliação excluída com sucesso!");
     } catch (error) {
       console.error(
         "Erro ao excluir avaliação:",
         error.response?.data || error.message
       );
-      mostrarSnackbar("Erro ao excluir avaliação. Tente novamente."); // exibe mensagem de erro
+      mostrarSnackbar("Erro ao excluir avaliação. Tente novamente.");
     } finally {
       setAvaliacaoSelecionada(null);
     }
@@ -127,7 +140,6 @@ export default function MinhasAvaliacoes({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* Sidebar */}
       {isSidebarOpen && (
         <View style={styles.sidebarOverlay}>
           <Sidebar
@@ -180,7 +192,6 @@ export default function MinhasAvaliacoes({ navigation }) {
         )}
       </ScrollView>
 
-      {/* Snackbar para confirmar/exibir mensagens */}
       <Snackbar
         visible={snackbarVisible}
         message={snackbarMessage}

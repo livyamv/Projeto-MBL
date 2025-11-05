@@ -45,40 +45,64 @@ export default function Home({ navigation }) {
   }, []);
 
   useEffect(() => {
-    async function carregarEstabelecimentos() {
-      try {
-        const tipos = ["restaurant", "store", "park"];
-        let todos = [];
-
-        for (const type of tipos) {
-          const response = await api.getEstabelecimentos({
-            location: "-20.5381,-47.4008",
-            radius: 15000,
-            type,
-          });
-
-          const dados = response.data?.estabelecimentos || [];
-
-          const filtradosFranca = dados
-            .filter(
-              (item) =>
-                item.endereco?.toLowerCase()?.includes("franca") ?? false
-            )
-            .map((item) => ({ ...item, tipo: type }));
-
-          todos = [...todos, ...filtradosFranca];
-        }
-
-        setEstabelecimentos(todos);
-      } catch (error) {
-        console.error("Erro ao buscar estabelecimentos:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
     carregarEstabelecimentos();
   }, []);
+
+  async function carregarEstabelecimentos() {
+    try {
+      const tipos = ["restaurant", "store", "park"];
+      let todos = [];
+
+      for (const type of tipos) {
+        const response = await api.getEstabelecimentos({
+          location: "-20.5381,-47.4008",
+          radius: 15000,
+          type,
+        });
+
+        const dados = response.data?.estabelecimentos || [];
+
+        const filtradosFranca = dados
+          .filter(
+            (item) =>
+              item.endereco?.toLowerCase()?.includes("franca") ?? false
+          )
+          .map((item) => ({ ...item, tipo: type }));
+
+        todos = [...todos, ...filtradosFranca];
+      }
+
+      setEstabelecimentos(todos);
+    } catch (error) {
+      console.error("Erro ao buscar estabelecimentos:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // 🔹 NOVO: Buscar estabelecimentos digitando no campo
+  async function buscarPorTexto() {
+    if (!search.trim()) {
+      carregarEstabelecimentos();
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await api.getEstabelecimentos({
+        location: "-20.5381,-47.4008",
+        radius: 15000,
+        query: search, // 🔹 envia o texto da busca
+      });
+
+      const resultados = response.data?.estabelecimentos || [];
+      setEstabelecimentos(resultados);
+    } catch (error) {
+      console.error("Erro ao buscar por texto:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const categorias = [
     { key: "restaurant", image: require("../../assets/restaurante.png") },
@@ -91,11 +115,10 @@ export default function Home({ navigation }) {
   }
 
   const listaFiltrada = estabelecimentos.filter((item) => {
-    const matchSearch = item.nome?.toLowerCase().includes(search.toLowerCase());
     const matchCategory = selectedCategory
       ? item.tipo === selectedCategory
       : true;
-    return matchSearch && matchCategory;
+    return matchCategory;
   });
 
   function handleLogout() {
@@ -131,10 +154,11 @@ export default function Home({ navigation }) {
           placeholderTextColor="#777"
           value={search}
           onChangeText={setSearch}
+          onSubmitEditing={buscarPorTexto} // 🔹 Pressionar Enter dispara a busca
         />
       </View>
 
-      {/* CATEGORIAS (voltou ao estilo antigo) */}
+      {/* CATEGORIAS */}
       <View style={styles.categoriesContainer}>
         {categorias.map((cat) => (
           <Pressable
@@ -170,7 +194,6 @@ export default function Home({ navigation }) {
               <View style={styles.cardLeftBar} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.cardTitle}>{item.nome}</Text>
-                
               </View>
               <AntDesign name="right" size={18} color="#888" />
             </Pressable>
@@ -258,7 +281,6 @@ const styles = StyleSheet.create({
     color: "#333",
     marginLeft: 8,
   },
-
   categoriesContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -280,7 +302,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     resizeMode: "cover",
   },
-
   card: {
     flexDirection: "row",
     alignItems: "center",
@@ -311,8 +332,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
-
   logoutButton: {
     position: "absolute",
     bottom: 30,
