@@ -168,9 +168,6 @@ export default function EstabelecimentosModal({ visible, onClose, item }) {
                 <Text style={styles.name} numberOfLines={2}>
                   {item.nome}
                 </Text>
-                {item.categoria && (
-                  <Text style={styles.category}>{item.categoria}</Text>
-                )}
               </View>
               <Pressable
                 onPress={toggleFavorito}
@@ -398,7 +395,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     borderRadius: 12,
     overflow: "hidden",
-    height: 180,
+    height: 250,
     borderWidth: 1,
     borderColor: "#ddd",
   },
@@ -463,14 +460,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   closeBtnBottom: {
-    backgroundColor: "#e5e7eb",
+    backgroundColor: "rgb(120, 141, 188)",
     borderRadius: 8,
     paddingVertical: 10,
   },
   closeTextBottom: {
     textAlign: "center",
     fontWeight: "600",
-    color: "#374151",
+    color: "#ffffff",
     fontSize: 15,
   },
 });

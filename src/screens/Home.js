@@ -259,7 +259,6 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
 
-  /** ESTILO ANTIGO DOS ÍCONES **/
   categoriesContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -307,6 +306,12 @@ const styles = StyleSheet.create({
     color: "#2f2f2f",
     fontWeight: "600",
   },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
 
   logoutButton: {
     position: "absolute",

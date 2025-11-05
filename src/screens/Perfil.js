@@ -96,7 +96,7 @@ export default function Perfil({ navigation }) {
 
   async function escolherFoto() {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: [ImagePicker.MediaType.Images],
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
       quality: 1,
@@ -110,7 +110,6 @@ export default function Perfil({ navigation }) {
 
   async function tirarFoto() {
     const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: [ImagePicker.MediaType.Images],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 1,
@@ -136,10 +135,7 @@ export default function Perfil({ navigation }) {
       toValue: height,
       duration: 300,
       useNativeDriver: true,
-    }).start(() => {
-      // Evita erro do useInsertionEffect — adia o setState
-      setTimeout(() => setFotoModalVisible(false), 0);
-    });
+    }).start(() => setFotoModalVisible(false));
   };
 
   const atualizarPerfil = async () => {
