@@ -15,6 +15,7 @@ import {
   Platform,
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
+import MapView, { Marker } from "react-native-maps";
 import api from "../axios/axios";
 
 export default function EstabelecimentosModal({ visible, onClose, item }) {
@@ -52,8 +53,6 @@ export default function EstabelecimentosModal({ visible, onClose, item }) {
           setFavorito(false);
           setFavoritoId(null);
         }
-      } catch (err) {
-        console.error("Erro ao buscar favoritos:", err.response?.data || err);
       } finally {
         if (mounted) setLoadingFav(false);
       }
@@ -65,11 +64,6 @@ export default function EstabelecimentosModal({ visible, onClose, item }) {
         const r = await api.getAvaliacoesPorLocal(item.place_id);
         setAvaliacoes(r.data.avaliacoes || []);
         if (r.data.media_notas !== undefined) setMediaNotas(r.data.media_notas);
-      } catch (err) {
-        console.error(
-          "Erro ao buscar avaliações:",
-          err.response?.data || err.message || err
-        );
       } finally {
         if (mounted) setLoadingAval(false);
       }
@@ -84,21 +78,15 @@ export default function EstabelecimentosModal({ visible, onClose, item }) {
   }, [visible, item]);
 
   const abrirSite = () => {
-    if (item?.site) {
-      Linking.openURL(item.site).catch((err) =>
-        console.error("Erro ao abrir site:", err)
-      );
-    }
+    if (item?.site) Linking.openURL(item.site).catch(() => {});
   };
 
   const toggleFavorito = async () => {
-    if (!item?.place_id) {
+    if (!item?.place_id)
       return Alert.alert("Erro", "ID do estabelecimento não encontrado.");
-    }
 
     try {
       setLoadingFav(true);
-
       if (!favorito) {
         const payload = {
           google_place_id: item.place_id,
@@ -120,19 +108,16 @@ export default function EstabelecimentosModal({ visible, onClose, item }) {
           const found = favs.find((f) => f.google_place_id === item.place_id);
           idToRemove = found?.id_favorito ?? null;
         }
-
         if (!idToRemove) {
           setFavorito(false);
           setFavoritoId(null);
           return;
         }
-
         await api.removeFavorito(idToRemove);
         setFavorito(false);
         setFavoritoId(null);
       }
-    } catch (err) {
-      console.error("Erro ao atualizar favoritos:", err.response?.data || err);
+    } catch {
       Alert.alert("Erro", "Não foi possível atualizar seus favoritos.");
     } finally {
       setLoadingFav(false);
@@ -156,13 +141,11 @@ export default function EstabelecimentosModal({ visible, onClose, item }) {
       await api.createAvaliacao(avaliacao);
       setComentario("");
       setNota(0);
-      // recarrega avaliações
       const r = await api.getAvaliacoesPorLocal(item.place_id);
       setAvaliacoes(r.data.avaliacoes || []);
       if (r.data.media_notas !== undefined) setMediaNotas(r.data.media_notas);
       Alert.alert("Sucesso", "Comentário enviado!");
-    } catch (err) {
-      console.error("Erro ao criar comentário:", err.response?.data || err);
+    } catch {
       Alert.alert("Erro", "Não foi possível enviar o comentário.");
     } finally {
       setSubmitting(false);
@@ -179,53 +162,38 @@ export default function EstabelecimentosModal({ visible, onClose, item }) {
           style={styles.containerWrapper}
         >
           <View style={styles.container}>
-            {/* HEADER */}
+            {/* Cabeçalho */}
             <View style={styles.header}>
               <View style={styles.headerLeft}>
                 <Text style={styles.name} numberOfLines={2}>
                   {item.nome}
                 </Text>
-                {item.categoria ? (
+                {item.categoria && (
                   <Text style={styles.category}>{item.categoria}</Text>
-                ) : null}
+                )}
               </View>
-
-              <View style={styles.headerRight}>
-                <Pressable
-                  onPress={toggleFavorito}
-                  style={({ pressed }) => [
-                    styles.heartWrap,
-                    pressed && { opacity: 0.8 },
-                  ]}
-                  disabled={loadingFav}
-                >
-                  {loadingFav ? (
-                    <ActivityIndicator size="small" color="#e91e63" />
-                  ) : (
-                    <AntDesign
-                      name="heart"
-                      size={22}
-                      color={favorito ? "#e91e63" : "#C0C0C0"}
-                    />
-                  )}
-                </Pressable>
-                <Pressable
-                  onPress={onClose}
-                  style={({ pressed }) => [
-                    styles.closeBtn,
-                    pressed && { opacity: 0.8 },
-                  ]}
-                >
-                  <Text style={styles.closeText}>Fechar</Text>
-                </Pressable>
-              </View>
+              <Pressable
+                onPress={toggleFavorito}
+                style={styles.heartWrap}
+                disabled={loadingFav}
+              >
+                {loadingFav ? (
+                  <ActivityIndicator size="small" color="#e91e63" />
+                ) : (
+                  <AntDesign
+                    name="heart"
+                    size={22}
+                    color={favorito ? "#e91e63" : "#C0C0C0"}
+                  />
+                )}
+              </Pressable>
             </View>
 
-            {/* BODY */}
+            {/* Corpo rolável */}
             <View style={styles.body}>
               <ScrollView
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 30 }}
+                contentContainerStyle={{ paddingBottom: 80 }}
               >
                 <View style={styles.infoRow}>
                   <Text style={styles.infoTitle}>Endereço</Text>
@@ -237,7 +205,6 @@ export default function EstabelecimentosModal({ visible, onClose, item }) {
                   <Text style={styles.infoValue}>{item.telefone || "—"}</Text>
                 </View>
 
-                {/* Horários */}
                 <View style={styles.scheduleSection}>
                   <Text style={styles.sectionTitle}>Horários</Text>
                   {item.horarios && item.horarios.length > 0 ? (
@@ -253,14 +220,37 @@ export default function EstabelecimentosModal({ visible, onClose, item }) {
                   )}
                 </View>
 
-                {/* Botão de site */}
-                {item.site ? (
+                {item.site && (
                   <Pressable onPress={abrirSite} style={styles.linkRow}>
                     <Text style={styles.linkText}>{item.site}</Text>
                   </Pressable>
-                ) : null}
+                )}
 
-                {/* Divider */}
+                {item.latitude && item.longitude ? (
+                  <View style={styles.mapContainer}>
+                    <MapView
+                      style={styles.map}
+                      initialRegion={{
+                        latitude: parseFloat(item.latitude),
+                        longitude: parseFloat(item.longitude),
+                        latitudeDelta: 0.005,
+                        longitudeDelta: 0.005,
+                      }}
+                    >
+                      <Marker
+                        coordinate={{
+                          latitude: parseFloat(item.latitude),
+                          longitude: parseFloat(item.longitude),
+                        }}
+                        title={item.nome}
+                        description={item.endereco}
+                      />
+                    </MapView>
+                  </View>
+                ) : (
+                  <Text style={styles.infoValue}>Mapa não disponível</Text>
+                )}
+
                 <View style={styles.divider} />
 
                 <View style={styles.ratingHeader}>
@@ -295,7 +285,6 @@ export default function EstabelecimentosModal({ visible, onClose, item }) {
                   ))
                 )}
 
-                {/* Formulário */}
                 <Text style={[styles.sectionTitle, { marginTop: 16 }]}>
                   Deixe sua avaliação:
                 </Text>
@@ -342,6 +331,13 @@ export default function EstabelecimentosModal({ visible, onClose, item }) {
                 </TouchableOpacity>
               </ScrollView>
             </View>
+
+            {/* Botão fixo no rodapé */}
+            <View style={styles.footer}>
+              <Pressable onPress={onClose} style={styles.closeBtnBottom}>
+                <Text style={styles.closeTextBottom}>Fechar</Text>
+              </Pressable>
+            </View>
           </View>
         </KeyboardAvoidingView>
       </View>
@@ -380,26 +376,7 @@ const styles = StyleSheet.create({
   headerLeft: { flex: 1, paddingRight: 8 },
   name: { fontSize: 18, fontWeight: "700", color: "#233044" },
   category: { fontSize: 13, color: "#6b7280", marginTop: 4 },
-  headerRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  heartWrap: {
-    backgroundColor: "#fff",
-    padding: 8,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "rgba(233,30,99,0.12)",
-    marginRight: 8,
-  },
-  closeBtn: {
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    backgroundColor: "#f1f5f9",
-  },
-  closeText: { color: "#374151", fontWeight: "600" },
+  heartWrap: { backgroundColor: "#fff", padding: 8, marginRight: 8 },
   body: { flex: 1, paddingHorizontal: 18, paddingTop: 12 },
   infoRow: { marginBottom: 10 },
   infoTitle: { fontSize: 13, color: "#6b7280", fontWeight: "600" },
@@ -407,12 +384,30 @@ const styles = StyleSheet.create({
   linkRow: { marginTop: 6, marginBottom: 10 },
   linkText: { color: "#2563eb", textDecorationLine: "underline" },
   divider: { height: 1, backgroundColor: "#f1f5f9", marginVertical: 12 },
+  sectionTitle: { fontSize: 16, fontWeight: "700", color: "#111827" },
+  scheduleSection: { marginBottom: 15 },
+  scheduleContainer: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  scheduleBox: {
+    backgroundColor: "#E8ECF8",
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  scheduleText: { fontSize: 13, color: "#2c3e50", fontWeight: "500" },
+  mapContainer: {
+    marginTop: 10,
+    borderRadius: 12,
+    overflow: "hidden",
+    height: 180,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  map: { flex: 1 },
   ratingHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
-  sectionTitle: { fontSize: 16, fontWeight: "700", color: "#111827" },
   avgText: { fontSize: 14, color: "#374151", fontWeight: "600" },
   emptyComments: { color: "#6b7280", marginVertical: 8 },
   commentBox: {
@@ -431,52 +426,51 @@ const styles = StyleSheet.create({
   },
   commentUser: { fontWeight: "700", color: "#111827" },
   commentRating: { color: "#f59e0b", fontWeight: "700" },
-  commentText: { color: "#374151", lineHeight: 20 },
+  commentText: { color: "#374151" },
   ratingContainer: {
     flexDirection: "row",
     justifyContent: "center",
-    marginVertical: 8,
+    marginVertical: 10,
   },
-  starButton: { marginHorizontal: 6 },
-  star: { fontSize: 28, color: "#cbd5e1" },
-  starActive: { color: "#FFD700" },
+  starButton: { marginHorizontal: 4 },
+  star: { fontSize: 30, color: "#ccc" },
+  starActive: { color: "#f59e0b" },
   input: {
-    borderWidth: 1,
-    borderColor: "#e6eef7",
-    padding: 14,
-    borderRadius: 10,
     backgroundColor: "#fff",
-    minHeight: 100,
+    borderRadius: 10,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    minHeight: 80,
     textAlignVertical: "top",
-    fontSize: 15,
-    marginTop: 8,
+    marginBottom: 10,
   },
   submitButton: {
-    backgroundColor: "#5f7f9aff",
-    paddingVertical: 14,
+    backgroundColor: "#5A6FA1",
     borderRadius: 10,
-    alignItems: "center",
-    marginTop: 14,
-    marginBottom: 30,
+    paddingVertical: 12,
   },
-  submitButtonText: { color: "#fff", fontWeight: "700", fontSize: 15 },
-
-  // Estilos de Horários
-  scheduleSection: { marginBottom: 15 },
-  scheduleContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
+  submitButtonText: {
+    textAlign: "center",
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 16,
   },
-  scheduleBox: {
-    backgroundColor: "#E8ECF8",
+  footer: {
+    borderTopWidth: 1,
+    borderTopColor: "#e5e7eb",
+    padding: 10,
+    backgroundColor: "#fff",
+  },
+  closeBtnBottom: {
+    backgroundColor: "#e5e7eb",
     borderRadius: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
-  scheduleText: {
-    fontSize: 13,
-    color: "#2c3e50",
-    fontWeight: "500",
+  closeTextBottom: {
+    textAlign: "center",
+    fontWeight: "600",
+    color: "#374151",
+    fontSize: 15,
   },
 });

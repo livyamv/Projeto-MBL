@@ -10,13 +10,12 @@ import {
   FlatList,
   ActivityIndicator,
 } from "react-native";
-import { AntDesign, Entypo } from "@expo/vector-icons";
+import { AntDesign, Entypo, Feather } from "@expo/vector-icons";
 import Logo from "../component/logo";
 import EstabelecimentosModal from "../component/EstabelecimentosModal";
 import Sidebar from "../component/Sidebar";
 import api from "../axios/axios";
 import * as SecureStore from "expo-secure-store";
-import { Feather } from "@expo/vector-icons";
 
 const { width } = Dimensions.get("window");
 
@@ -31,7 +30,6 @@ export default function Home({ navigation }) {
   const [usuario, setUsuario] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Carregar token e usuário do SecureStore
   useEffect(() => {
     async function carregarUsuario() {
       try {
@@ -46,7 +44,6 @@ export default function Home({ navigation }) {
     carregarUsuario();
   }, []);
 
-  // Carregar estabelecimentos da API
   useEffect(() => {
     async function carregarEstabelecimentos() {
       try {
@@ -74,13 +71,7 @@ export default function Home({ navigation }) {
 
         setEstabelecimentos(todos);
       } catch (error) {
-        if (error.response) {
-          console.error("Erro da API:", error.response.data);
-        } else if (error.request) {
-          console.error("Sem resposta do servidor:", error.request);
-        } else {
-          console.error("Erro desconhecido:", error.message);
-        }
+        console.error("Erro ao buscar estabelecimentos:", error);
       } finally {
         setLoading(false);
       }
@@ -88,14 +79,6 @@ export default function Home({ navigation }) {
 
     carregarEstabelecimentos();
   }, []);
-
-  function handleLogout() {
-    navigation.replace("Login");
-  }
-
-  function toggleSidebar() {
-    setSidebarOpen(!sidebarOpen);
-  }
 
   const categorias = [
     { key: "restaurant", image: require("../../assets/restaurante.png") },
@@ -115,12 +98,20 @@ export default function Home({ navigation }) {
     return matchSearch && matchCategory;
   });
 
+  function handleLogout() {
+    navigation.replace("Login");
+  }
+
+  function toggleSidebar() {
+    setSidebarOpen(!sidebarOpen);
+  }
+
   return (
     <View style={styles.container}>
       {/* HEADER */}
       <View style={styles.header}>
-        <Pressable onPress={toggleSidebar}>
-          <Entypo name="menu" size={28} color="#333" />
+        <Pressable onPress={toggleSidebar} style={styles.menuButton}>
+          <Entypo name="menu" size={26} color="#2f2f2f" />
         </Pressable>
 
         <View style={styles.logoContainer}>
@@ -133,17 +124,17 @@ export default function Home({ navigation }) {
 
       {/* BARRA DE PESQUISA */}
       <View style={styles.searchContainer}>
+        <Feather name="search" size={22} color="#777" />
         <TextInput
-          placeholder="Pesquisar"
+          placeholder="Buscar lugares..."
           style={styles.searchInput}
-          placeholderTextColor="#555"
+          placeholderTextColor="#777"
           value={search}
           onChangeText={setSearch}
         />
-        <Feather name="search" size={22} color="#333" />
       </View>
 
-      {/* CATEGORIAS */}
+      {/* CATEGORIAS (voltou ao estilo antigo) */}
       <View style={styles.categoriesContainer}>
         {categorias.map((cat) => (
           <Pressable
@@ -151,7 +142,7 @@ export default function Home({ navigation }) {
             onPress={() => handleCategoryClick(cat.key)}
             style={[
               styles.categoryButton,
-              selectedCategory === cat.key && styles.selected,
+              selectedCategory === cat.key && styles.selectedCategory,
             ]}
           >
             <Image source={cat.image} style={styles.categoryImage} />
@@ -159,7 +150,7 @@ export default function Home({ navigation }) {
         ))}
       </View>
 
-      {/* INDICADOR DE CARREGAMENTO */}
+      {/* LISTA */}
       {loading ? (
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color="#5a6fa1" />
@@ -176,15 +167,19 @@ export default function Home({ navigation }) {
                 setModalVisible(true);
               }}
             >
-              <View style={styles.iconBox} />
-              <Text style={styles.cardText}>{item.nome}</Text>
+              <View style={styles.cardLeftBar} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.cardTitle}>{item.nome}</Text>
+                
+              </View>
+              <AntDesign name="right" size={18} color="#888" />
             </Pressable>
           )}
           contentContainerStyle={{ paddingBottom: 120, paddingTop: 20 }}
         />
       )}
 
-      {/* MODAL DE DETALHES */}
+      {/* MODAL */}
       {selectedItem && (
         <EstabelecimentosModal
           visible={modalVisible}
@@ -196,11 +191,9 @@ export default function Home({ navigation }) {
       )}
 
       {/* FOOTER */}
-      <View style={styles.footer}>
-        <Pressable style={styles.logoutButton} onPress={handleLogout}>
-          <AntDesign name="logout" size={24} color="gray" />
-        </Pressable>
-      </View>
+      <Pressable style={styles.logoutButton} onPress={handleLogout}>
+        <AntDesign name="logout" size={24} color="#555" />
+      </Pressable>
 
       {/* SIDEBAR */}
       <Sidebar
@@ -214,32 +207,59 @@ export default function Home({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#e5e5e5", padding: 20 },
+  container: {
+    flex: 1,
+    backgroundColor: "#F4F5F7",
+    paddingHorizontal: 20,
+    paddingTop: 40,
+  },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 40,
+    alignItems: "flex-start",
     marginBottom: 20,
+  },
+  menuButton: {
+    backgroundColor: "#fff",
+    padding: 8,
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 3,
+    elevation: 3,
   },
   logoContainer: { flexDirection: "column", alignItems: "flex-end" },
   subtitle: {
     fontSize: 13,
-    color: "#555",
-    marginTop: 4,
-    maxWidth: width * 0.6,
+    color: "#666",
+    marginTop: 6,
+    fontStyle: "italic",
+    maxWidth: width * 0.65,
     textAlign: "right",
   },
   searchContainer: {
     flexDirection: "row",
-    backgroundColor: "#C2C2C2",
-    borderRadius: 35,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    backgroundColor: "#fff",
+    borderRadius: 25,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     alignItems: "center",
-    marginBottom: 30,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 2,
+    marginBottom: 25,
   },
-  searchInput: { flex: 1, fontSize: 16, color: "white" },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: "#333",
+    marginLeft: 8,
+  },
+
+  /** ESTILO ANTIGO DOS ÍCONES **/
   categoriesContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -254,43 +274,51 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  selected: { backgroundColor: "#5a6fa1" },
+  selectedCategory: { backgroundColor: "#5a6fa1" },
   categoryImage: {
     width: 50,
     height: 50,
     borderRadius: 8,
     resizeMode: "cover",
   },
+
   card: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#fff",
-    padding: 12,
-    marginBottom: 10,
-    borderRadius: 8,
+    padding: 14,
+    borderRadius: 12,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 2,
   },
-  iconBox: {
-    width: 20,
-    height: 20,
-    borderRadius: 5,
+  cardLeftBar: {
+    width: 5,
+    height: "100%",
+    borderRadius: 3,
     backgroundColor: "#5a6fa1",
     marginRight: 12,
   },
-  cardText: { fontSize: 16, color: "#333" },
-  footer: {
+  cardTitle: {
+    fontSize: 16,
+    color: "#2f2f2f",
+    fontWeight: "600",
+  },
+
+  logoutButton: {
     position: "absolute",
     bottom: 30,
-    left: 20,
     right: 20,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  logoutButton: { flexDirection: "row", alignItems: "center", gap: 5 },
-  loaderContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 20,
+    backgroundColor: "#fff",
+    padding: 10,
+    borderRadius: 50,
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3,
   },
 });
