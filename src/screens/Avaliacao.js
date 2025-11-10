@@ -23,7 +23,6 @@ export default function MinhasAvaliacoes({ navigation }) {
   const [avaliacaoSelecionada, setAvaliacaoSelecionada] = useState(null);
   const [confirmMode, setConfirmMode] = useState(false);
 
-  // 🔹 Buscar avaliações do usuário
   const fetchAvaliacoes = async () => {
     try {
       const response = await api.getAvaliacoesUsuario();
@@ -39,7 +38,7 @@ export default function MinhasAvaliacoes({ navigation }) {
 
       setAvaliacoes(listaAvaliacoes);
     } catch (err) {
-      // 🔸 Se o erro for 404 (nenhuma avaliação), não mostrar erro no console
+      
       if (err.response && err.response.status === 404) {
         setAvaliacoes([]);
       } else {
@@ -89,7 +88,7 @@ export default function MinhasAvaliacoes({ navigation }) {
     setSnackbarVisible(true);
   };
 
-  const mostrarSnackbar = (mensagem, tempo = 2000) => {
+  const mostrarSnackbar = (mensagem, tempo = 1500) => {
     setSnackbarMessage(mensagem);
     setConfirmMode(false);
     setSnackbarVisible(true);

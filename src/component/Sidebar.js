@@ -86,7 +86,7 @@ export default function Sidebar({ isOpen, onClose, navigation, onLogout }) {
             ]}
             onPress={() => handleNavigation("Favoritos")}
           >
-            <Feather name="heart" size={22} color="#e63946" />
+            <Feather name="heart" size={24} color="#222" />
             <Text style={styles.sidebarItem}>Favoritos</Text>
           </Pressable>
 

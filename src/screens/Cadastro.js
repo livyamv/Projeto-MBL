@@ -4,14 +4,17 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
   StyleSheet,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import api from "../axios/axios";
 import Logo from "../component/logo";
 import CodigoModal from "../component/CodigoModal";
+import Snackbar from "../component/Snackbar"; // import do Snackbar
 
 export default function Cadastro() {
   const navigation = useNavigation();
@@ -28,10 +31,18 @@ export default function Cadastro() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showModalCodigo, setShowModalCodigo] = useState(false);
 
-  // Solicitar código e abrir modal
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+
+  const mostrarSnackbar = (mensagem, tempo = 1500) => {
+    setSnackbarMessage(mensagem);
+    setSnackbarVisible(true);
+    setTimeout(() => setSnackbarVisible(false), tempo);
+  };
+
   async function handleCadastro() {
     if (usuario.senha !== usuario.confirmarSenha) {
-      Alert.alert("Erro", "As senhas não coincidem!");
+      mostrarSnackbar("As senhas não coincidem!");
       return;
     }
 
@@ -47,113 +58,120 @@ export default function Cadastro() {
       setShowModalCodigo(true); // abre modal
     } catch (error) {
       const errorMessage = error.response?.data?.error || "Erro desconhecido";
-      Alert.alert("Erro", errorMessage);
+      mostrarSnackbar(errorMessage);
       console.log("Erro no cadastro:", error);
     }
   }
 
   return (
-    <View style={styles.container}>
-      <Logo />
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "position" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+    >
+      <ScrollView
+        contentContainerStyle={{ alignItems: "center" }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={{ marginTop: 50, alignItems: "center" }}>
+          <Logo />
+        </View>
 
-      <Text style={styles.subtitle}>
-        Grandes Lugares Inspiram Momentos Perfeitos.
-      </Text>
+        <Text style={styles.subtitle}>
+          Grandes Lugares Inspiram Momentos Perfeitos.
+        </Text>
 
-      <Text style={styles.title}>Faça seu cadastro!</Text>
+        <Text style={styles.title}>Faça seu cadastro!</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Nome"
-        placeholderTextColor="#000"
-        value={usuario.nome}
-        onChangeText={(value) => setUsuario({ ...usuario, nome: value })}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="CPF"
-        placeholderTextColor="#000"
-        value={usuario.cpf}
-        onChangeText={(value) => setUsuario({ ...usuario, cpf: value })}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        placeholderTextColor="#000"
-        value={usuario.email}
-        onChangeText={(value) => setUsuario({ ...usuario, email: value })}
-      />
-
-      <View style={styles.passwordContainer}>
         <TextInput
-          style={styles.passwordInput}
-          placeholder="Senha"
+          style={styles.input}
+          placeholder="Nome"
           placeholderTextColor="#000"
-          secureTextEntry={!showPassword}
-          value={usuario.senha}
-          onChangeText={(value) => setUsuario({ ...usuario, senha: value })}
+          value={usuario.nome}
+          onChangeText={(value) => setUsuario({ ...usuario, nome: value })}
         />
-        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-          <Ionicons
-            name={showPassword ? "eye" : "eye-off"}
-            size={24}
-            color="grey"
-          />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.passwordContainer}>
         <TextInput
-          style={styles.passwordInput}
-          placeholder="Confirmar Senha"
+          style={styles.input}
+          placeholder="CPF"
           placeholderTextColor="#000"
-          secureTextEntry={!showConfirmPassword}
-          value={usuario.confirmarSenha}
-          onChangeText={(value) =>
-            setUsuario({ ...usuario, confirmarSenha: value })
-          }
+          value={usuario.cpf}
+          onChangeText={(value) => setUsuario({ ...usuario, cpf: value })}
         />
-        <TouchableOpacity
-          onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-        >
-          <Ionicons
-            name={showConfirmPassword ? "eye" : "eye-off"}
-            size={24}
-            color="grey"
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          placeholderTextColor="#000"
+          value={usuario.email}
+          onChangeText={(value) => setUsuario({ ...usuario, email: value })}
+        />
+
+        <View style={styles.passwordContainer}>
+          <TextInput
+            style={styles.passwordInput}
+            placeholder="Senha"
+            placeholderTextColor="#000"
+            secureTextEntry={!showPassword}
+            value={usuario.senha}
+            onChangeText={(value) => setUsuario({ ...usuario, senha: value })}
           />
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+            <Ionicons
+              name={showPassword ? "eye" : "eye-off"}
+              size={24}
+              color="grey"
+            />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.passwordContainer}>
+          <TextInput
+            style={styles.passwordInput}
+            placeholder="Confirmar Senha"
+            placeholderTextColor="#000"
+            secureTextEntry={!showConfirmPassword}
+            value={usuario.confirmarSenha}
+            onChangeText={(value) =>
+              setUsuario({ ...usuario, confirmarSenha: value })
+            }
+          />
+          <TouchableOpacity
+            onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+          >
+            <Ionicons
+              name={showConfirmPassword ? "eye" : "eye-off"}
+              size={24}
+              color="grey"
+            />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.loginRow}>
+          <Text style={styles.loginText}>Já possui uma conta?</Text>
+          <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+            <Text style={styles.loginLink}> Logar!</Text>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity style={styles.button} onPress={handleCadastro}>
+          <Text style={styles.buttonText}>Cadastrar</Text>
         </TouchableOpacity>
-      </View>
 
-      <View style={styles.loginRow}>
-        <Text style={styles.loginText}>Já possui uma conta?</Text>
-        <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-          <Text style={styles.loginLink}> Logar!</Text>
-        </TouchableOpacity>
-      </View>
+        {/* Modal para inserir código */}
+        <CodigoModal
+          visible={showModalCodigo}
+          email={usuario.email}
+          onClose={() => setShowModalCodigo(false)}
+          onSuccess={() => navigation.navigate("Login")}
+        />
 
-      <TouchableOpacity style={styles.button} onPress={handleCadastro}>
-        <Text style={styles.buttonText}>Cadastrar</Text>
-      </TouchableOpacity>
-
-      {/* Modal para inserir código */}
-      <CodigoModal
-        visible={showModalCodigo}
-        email={usuario.email}
-        onClose={() => setShowModalCodigo(false)}
-        onSuccess={() => navigation.navigate("Login")}
-      />
-    </View>
+        {/* Snackbar */}
+        <Snackbar visible={snackbarVisible} message={snackbarMessage} />
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#E5E5E5",
-    alignItems: "center",
-    paddingHorizontal: 30,
-    paddingTop: 20,
-  },
   subtitle: {
     fontSize: 18,
     textAlign: "center",
@@ -168,7 +186,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     color: "#000",
     fontFamily: "sans-serif-light",
-    marginTop: 130,
+    marginTop: 50,
   },
   input: {
     width: "70%",

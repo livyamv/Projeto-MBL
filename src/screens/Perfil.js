@@ -231,7 +231,7 @@ export default function Perfil({ navigation }) {
             useNativeDriver: true,
           }),
         ]).start(() => setSnackbarVisible(false));
-      }, 2500);
+      }, 1000);
     });
   };
 

@@ -11,8 +11,9 @@ import * as SecureStore from "expo-secure-store";
 import { Ionicons } from "@expo/vector-icons";
 import api from "../axios/axios";
 import Logo from "../component/logo";
-import CodigoModal from "../component/CodigoModal";
-import Snackbar from "../component/Snackbar"; // snackbar arredondado
+import RedefinirSenhaModal from "../component/RedefinirSenhaModal";
+import Snackbar from "../component/Snackbar";
+import { Portal } from "react-native-paper";
 
 export default function Login({ navigation }) {
   const [usuario, setUsuario] = useState({
@@ -24,7 +25,7 @@ export default function Login({ navigation }) {
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
 
-  const mostrarSnackbar = (mensagem, tempo = 3000) => {
+  const mostrarSnackbar = (mensagem, tempo = 1500) => {
     setSnackbarMessage(mensagem);
     setSnackbarVisible(true);
     setTimeout(() => setSnackbarVisible(false), tempo);
@@ -63,9 +64,7 @@ export default function Login({ navigation }) {
       <Text style={styles.subtitle}>
         Grandes Lugares Inspiram Momentos Perfeitos.
       </Text>
-
       <Text style={styles.loginText}>Faça seu login!</Text>
-
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -75,7 +74,6 @@ export default function Login({ navigation }) {
         value={usuario.email}
         onChangeText={(value) => setUsuario({ ...usuario, email: value })}
       />
-
       <View style={styles.passwordContainer}>
         <TextInput
           style={styles.passwordInput}
@@ -98,14 +96,12 @@ export default function Login({ navigation }) {
           />
         </TouchableOpacity>
       </View>
-
       <View style={styles.linkContainer}>
         <Text style={styles.linkText}>Não possui login? </Text>
         <TouchableOpacity onPress={() => navigation.navigate("Cadastro")}>
           <Text style={styles.linkHighlight}>Cadastre-se!</Text>
         </TouchableOpacity>
       </View>
-
       <TouchableOpacity
         onPress={() => setModalVisible(true)}
         style={{ marginTop: 5 }}
@@ -114,26 +110,20 @@ export default function Login({ navigation }) {
           Esqueci minha senha
         </Text>
       </TouchableOpacity>
-
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Logar</Text>
       </TouchableOpacity>
-
-      <CodigoModal
+      <RedefinirSenhaModal
         visible={modalVisible}
-        email={usuario.email}
         onClose={() => setModalVisible(false)}
-        tipo="redefinir"
-        onSuccess={() =>
-          mostrarSnackbar("Senha redefinida com sucesso!", 3000)
-        }
+        onSuccess={(msg) => mostrarSnackbar(msg)}
+        onError={(msg) => mostrarSnackbar(msg)}
       />
 
       {/* Snackbar arredondado */}
-      <Snackbar
-        visible={snackbarVisible}
-        message={snackbarMessage}
-      />
+      <Portal>
+        <Snackbar visible={snackbarVisible} message={snackbarMessage} />
+      </Portal>
     </View>
   );
 }
@@ -166,7 +156,7 @@ const styles = StyleSheet.create({
     fontSize: 25,
     color: "#000",
     marginBottom: 16,
-    marginTop: 100,
+    marginTop: 50,
   },
   input: {
     width: "84%",

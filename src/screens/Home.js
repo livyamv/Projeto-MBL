@@ -80,7 +80,7 @@ export default function Home({ navigation }) {
     }
   }
 
-  // 🔹 NOVO: Buscar estabelecimentos digitando no campo
+  
   async function buscarPorTexto() {
     if (!search.trim()) {
       carregarEstabelecimentos();
@@ -92,7 +92,7 @@ export default function Home({ navigation }) {
       const response = await api.getEstabelecimentos({
         location: "-20.5381,-47.4008",
         radius: 15000,
-        query: search, // 🔹 envia o texto da busca
+        query: search, 
       });
 
       const resultados = response.data?.estabelecimentos || [];
@@ -154,7 +154,7 @@ export default function Home({ navigation }) {
           placeholderTextColor="#777"
           value={search}
           onChangeText={setSearch}
-          onSubmitEditing={buscarPorTexto} // 🔹 Pressionar Enter dispara a busca
+          onSubmitEditing={buscarPorTexto} 
         />
       </View>
 
