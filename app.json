@@ -20,7 +20,8 @@
         "foregroundImage": "./assets/iconGlimp.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.malu1313.Projeto_finalMBL"
     },
     "web": {
       "favicon": "./assets/iconGlimp.png"
@@ -29,6 +30,11 @@
       "expo-secure-store",
       "expo-asset",
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "7fa7894d-9688-4ea8-ad5a-c2a852f2a0e4"
+      }
+    }
   }
 }
