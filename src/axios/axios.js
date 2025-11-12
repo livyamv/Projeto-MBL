@@ -2,7 +2,7 @@ import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 
 const api = axios.create({
-  baseURL: "https://glimpmapss.canadacentral.cloudapp.azure.com:3000/projeto_final/",
+  baseURL: "https://glimpmaps.canadacentral.cloudapp.azure.com:3000/projeto_final/",
   headers: { accept: "application/json" },
 });
 
