@@ -10,6 +10,7 @@ import { Provider as PaperProvider } from "react-native-paper";
 import Favoritos from "./src/screens/Favoritos";
 import SobreNos from "./src/screens/SobreNos";
 import Avaliacao from "./src/screens/Avaliacao";
+import MapaScreen from "./src/screens/MapaScreen";
 
 const Stack = createStackNavigator();
 
@@ -26,6 +27,7 @@ export default function App() {
           <Stack.Screen name="SobreNos" component={SobreNos} />
           <Stack.Screen name="Perfil" component={Perfil} />
           <Stack.Screen name="Avaliacao" component={Avaliacao} />
+          <Stack.Screen name="MapaScreen" component={MapaScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </PaperProvider>

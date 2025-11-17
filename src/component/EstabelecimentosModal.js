@@ -15,10 +15,12 @@ import {
   Platform,
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
-import MapView, { Marker } from "react-native-maps";
+import { useNavigation } from "@react-navigation/native"; // ← ADICIONADO
 import api from "../axios/axios";
 
 export default function EstabelecimentosModal({ visible, onClose, item }) {
+  const navigation = useNavigation(); // ← ADICIONADO
+
   const [favorito, setFavorito] = useState(false);
   const [favoritoId, setFavoritoId] = useState(null);
   const [avaliacoes, setAvaliacoes] = useState([]);
@@ -186,7 +188,7 @@ export default function EstabelecimentosModal({ visible, onClose, item }) {
               </Pressable>
             </View>
 
-            {/* Corpo rolável */}
+            {/* Corpo */}
             <View style={styles.body}>
               <ScrollView
                 showsVerticalScrollIndicator={false}
@@ -223,30 +225,18 @@ export default function EstabelecimentosModal({ visible, onClose, item }) {
                   </Pressable>
                 )}
 
-                {item.latitude && item.longitude ? (
-                  <View style={styles.mapContainer}>
-                    <MapView
-                      style={styles.map}
-                      initialRegion={{
-                        latitude: parseFloat(item.latitude),
-                        longitude: parseFloat(item.longitude),
-                        latitudeDelta: 0.005,
-                        longitudeDelta: 0.005,
-                      }}
-                    >
-                      <Marker
-                        coordinate={{
-                          latitude: parseFloat(item.latitude),
-                          longitude: parseFloat(item.longitude),
-                        }}
-                        title={item.nome}
-                        description={item.endereco}
-                      />
-                    </MapView>
-                  </View>
-                ) : (
-                  <Text style={styles.infoValue}>Mapa não disponível</Text>
-                )}
+                {/* BOTÃO PARA ABRIR O MAPA */}
+                <Pressable
+                  style={styles.mapButton}
+                  onPress={() => {
+                    onClose();
+                    navigation.navigate("MapaScreen", { item });
+                  }}
+                >
+                  <Text style={styles.mapButtonText}>
+                    Ver localização no mapa
+                  </Text>
+                </Pressable>
 
                 <View style={styles.divider} />
 
@@ -329,7 +319,7 @@ export default function EstabelecimentosModal({ visible, onClose, item }) {
               </ScrollView>
             </View>
 
-            {/* Botão fixo no rodapé */}
+            {/* Rodapé */}
             <View style={styles.footer}>
               <Pressable onPress={onClose} style={styles.closeBtnBottom}>
                 <Text style={styles.closeTextBottom}>Fechar</Text>
@@ -372,7 +362,6 @@ const styles = StyleSheet.create({
   },
   headerLeft: { flex: 1, paddingRight: 8 },
   name: { fontSize: 18, fontWeight: "700", color: "#233044" },
-  category: { fontSize: 13, color: "#6b7280", marginTop: 4 },
   heartWrap: { backgroundColor: "#fff", padding: 8, marginRight: 8 },
   body: { flex: 1, paddingHorizontal: 18, paddingTop: 12 },
   infoRow: { marginBottom: 10 },
@@ -391,15 +380,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   scheduleText: { fontSize: 13, color: "#2c3e50", fontWeight: "500" },
-  mapContainer: {
-    marginTop: 10,
-    borderRadius: 12,
-    overflow: "hidden",
-    height: 250,
-    borderWidth: 1,
-    borderColor: "#ddd",
-  },
-  map: { flex: 1 },
+
   ratingHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -469,5 +450,16 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#ffffff",
     fontSize: 15,
+  },
+  mapButton: {
+    backgroundColor: "#516FA6",
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 10,
+  },
+  mapButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    textAlign: "center",
   },
 });
